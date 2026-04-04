@@ -10,7 +10,11 @@
 <div class="container py-3">
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h2 class="m-0">Quan ly dich vu</h2>
-        <a class="btn btn-outline-secondary" href="${pageContext.request.contextPath}/home">Back to dashboard</a>
+        <div class="d-flex gap-2">
+            <a class="btn btn-outline-success" href="${pageContext.request.contextPath}/sukien?action=list">Su kien</a>
+            <a class="btn btn-outline-dark" href="${pageContext.request.contextPath}/thongke">Thong ke</a>
+            <a class="btn btn-outline-secondary" href="${pageContext.request.contextPath}/home">Back to dashboard</a>
+        </div>
     </div>
 
     <c:if test="${not empty flashMessage}">

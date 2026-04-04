@@ -18,6 +18,10 @@ import java.util.Optional;
 @WebServlet(urlPatterns = {"/home"})
 public class HomeController extends HttpServlet {
     private static final double DEFAULT_DON_GIA_GIO = 12000;
+    private static final String STATUS_AVAILABLE_NEW = "BINH_THUONG";
+    private static final String STATUS_AVAILABLE_LEGACY = "TRONG";
+    private static final String STATUS_PLAYING_NEW = "DANG_CHOI";
+    private static final String STATUS_PLAYING_LEGACY = "DANG_SU_DUNG";
 
     private final MayPSDAO mayPSDAO = new MayPSDAO();
     private final LuotChoiDAO luotChoiDAO = new LuotChoiDAO();
@@ -74,14 +78,15 @@ public class HomeController extends HttpServlet {
         }
 
         MayPS may = mayOpt.get();
-        if (!"BINH_THUONG".equals(may.getTinhTrang())) {
+        if (!isAvailableStatus(may.getTinhTrang())) {
             setFlash(request, "Machine " + may.getTenMay() + " is not available.");
             return;
         }
 
         int nhanVienId = parseInt(request.getParameter("nhanVienId"), 1);
         boolean taoLuot = luotChoiDAO.batDauLuotChoi(mayId, nhanVienId, DEFAULT_DON_GIA_GIO);
-        boolean updateMay = mayPSDAO.updateTinhTrang(mayId, "DANG_CHOI");
+        // Use legacy-safe status value to match existing DB check constraints.
+        boolean updateMay = mayPSDAO.updateTinhTrang(mayId, STATUS_PLAYING_LEGACY);
 
         if (taoLuot && updateMay) {
             setFlash(request, "Opened " + may.getTenMay() + " successfully.");
@@ -103,9 +108,13 @@ public class HomeController extends HttpServlet {
             return;
         }
 
-        mayPSDAO.updateTinhTrang(mayId, "BINH_THUONG");
+        mayPSDAO.updateTinhTrang(mayId, STATUS_AVAILABLE_LEGACY);
         String tienText = String.format(Locale.US, "%.0f", tongTienOpt.get());
         setFlash(request, "Closed " + mayOpt.get().getTenMay() + ". Session total: " + tienText + " VND.");
+    }
+
+    private static boolean isAvailableStatus(String tinhTrang) {
+        return STATUS_AVAILABLE_NEW.equals(tinhTrang) || STATUS_AVAILABLE_LEGACY.equals(tinhTrang);
     }
 
     private static int parseInt(String value, int defaultValue) {

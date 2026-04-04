@@ -1,5 +1,3 @@
--- HomePS minimal schema for machine dashboard + play sessions
-
 CREATE TABLE IF NOT EXISTS mayps (
     id SERIAL PRIMARY KEY,
     tenmay VARCHAR(100) NOT NULL,

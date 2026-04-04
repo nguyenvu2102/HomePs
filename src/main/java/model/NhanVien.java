@@ -4,8 +4,8 @@ public class NhanVien {
     private int id;
     private String tenNhanVien;
     private String soDienThoai;
-    private String chucVu; // BEP, TRONG_MAY, BAO_VE, KY_THUAT, LAO_CONG
-    private String trangThai; // DANG_LAM, NGHI
+    private String chucVu;
+    private String trangThai;
 
     public NhanVien() {}
 
@@ -17,7 +17,6 @@ public class NhanVien {
         this.trangThai = trangThai;
     }
 
-    // Getter và Setter
     public int getId() { return id; }
     public void setId(int id) { this.id = id; }
     public String getTenNhanVien() { return tenNhanVien; }

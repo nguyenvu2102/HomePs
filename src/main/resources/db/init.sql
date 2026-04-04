@@ -1,5 +1,3 @@
--- HomePS minimal schema for machine dashboard + play sessions
-
 CREATE TABLE IF NOT EXISTS mayps (
     id SERIAL PRIMARY KEY,
     tenmay VARCHAR(100) NOT NULL,
@@ -50,3 +48,40 @@ FROM (
                 ('Tra da', 5000, 'NUOC')
      ) AS seed(tendichvu, dongia, loai)
 WHERE NOT EXISTS (SELECT 1 FROM dichvu);
+
+-- Bảng Hoá đơn
+CREATE TABLE IF NOT EXISTS hoadon (
+    id SERIAL PRIMARY KEY,
+    luotchoiid INT NOT NULL REFERENCES luotchoi(id),
+    ngaytao TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    tienchoi NUMERIC(12,2) NOT NULL DEFAULT 0,
+    tiendichvu NUMERIC(12,2) NOT NULL DEFAULT 0,
+    tienkhuyenmai NUMERIC(12,2) NOT NULL DEFAULT 0,
+    tongtien NUMERIC(12,2) NOT NULL DEFAULT 0,
+    trangthai VARCHAR(30) NOT NULL DEFAULT 'CHUA_THANH_TOAN'
+);
+
+-- Bảng Chi tiết hoá đơn (dịch vụ)
+CREATE TABLE IF NOT EXISTS chitiet_hoadon (
+    id SERIAL PRIMARY KEY,
+    hoadonid INT NOT NULL REFERENCES hoadon(id),
+    dichvuid INT NOT NULL REFERENCES dichvu(id),
+    tendichvu VARCHAR(120) NOT NULL,
+    soluong INT NOT NULL DEFAULT 1,
+    dongia NUMERIC(12,2) NOT NULL,
+    thanhtien NUMERIC(12,2) NOT NULL
+);
+
+-- Bảng Sự kiện (khuyến mãi)
+CREATE TABLE IF NOT EXISTS sukien (
+    id SERIAL PRIMARY KEY,
+    tensukien VARCHAR(200) NOT NULL,
+    mota TEXT,
+    phantramgiamgia INT NOT NULL DEFAULT 0 CHECK (phantramgiamgia >= 0 AND phantramgiamgia <= 100),
+    loaisukien VARCHAR(30) NOT NULL,
+    gioapdung VARCHAR(20),
+    ngayapdung VARCHAR(20),
+    ngayBatDau TIMESTAMP NOT NULL,
+    ngayKetThuc TIMESTAMP NOT NULL,
+    trangthai BOOLEAN DEFAULT true
+);

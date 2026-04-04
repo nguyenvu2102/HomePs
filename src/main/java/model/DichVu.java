@@ -4,7 +4,7 @@ public class DichVu {
     private int id;
     private String tenDichVu;
     private double donGia;
-    private String loai; // DO_AN, NUOC, KHAC
+    private String loai;
 
     public DichVu() {
     }

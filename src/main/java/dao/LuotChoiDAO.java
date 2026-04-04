@@ -31,6 +31,25 @@ public class LuotChoiDAO {
         return Optional.empty();
     }
 
+    public Optional<LuotChoi> findById(int id) {
+        String sql = "SELECT id, mayid, nhanvienid, thoigianbatdau, thoigianketthuc, dongiagio, tongtiengio, trangthai " +
+                "FROM luotchoi WHERE id = ?";
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, id);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return Optional.of(mapRow(rs));
+                }
+            }
+        } catch (Exception e) {
+            throw new RuntimeException("Cannot load play session", e);
+        }
+
+        return Optional.empty();
+    }
+
     public boolean batDauLuotChoi(int mayId, int nhanVienId, double donGiaGio) {
         String sql = "INSERT INTO luotchoi (mayid, nhanvienid, thoigianbatdau, dongiagio, tongtiengio, trangthai) " +
                 "VALUES (?, ?, NOW(), ?, 0, 'DANG_CHOI')";

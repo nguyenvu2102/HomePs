@@ -15,11 +15,17 @@
 <body>
 <div class="container py-3">
     <div class="d-flex justify-content-between align-items-center mt-3">
-        <h2 class="m-0">HomePS Machine Dashboard</h2>
-        <div class="d-flex gap-2">
+        <div>
+            <h2 class="m-0">HomePS Machine Dashboard</h2>
+            <c:if test="${not empty sessionScope.currentUser}">
+                <div class="text-muted small">Xin chao, <strong>${sessionScope.currentUser.tenNhanVien}</strong> (${sessionScope.currentUser.vaiTro})</div>
+            </c:if>
+        </div>
+        <div class="d-flex gap-2 align-items-center">
             <a class="btn btn-outline-primary" href="${pageContext.request.contextPath}/dichvu">Quan ly dich vu</a>
             <a class="btn btn-outline-success" href="${pageContext.request.contextPath}/sukien?action=list">Quan ly su kien</a>
             <a class="btn btn-outline-dark" href="${pageContext.request.contextPath}/thongke">Thong ke</a>
+            <a class="btn btn-outline-secondary" href="${pageContext.request.contextPath}/logout">Dang xuat</a>
         </div>
     </div>
 

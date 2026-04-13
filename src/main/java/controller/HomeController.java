@@ -2,26 +2,27 @@ package controller;
 
 import dao.LuotChoiDAO;
 import dao.MayPSDAO;
+import jakarta.servlet.http.HttpSession;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession;
+import model.NhanVien;
 import model.MayPS;
+import utils.DBConnection;
 
 import java.io.IOException;
+import java.sql.Connection;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 
 @WebServlet(urlPatterns = {"/home"})
 public class HomeController extends HttpServlet {
-    private static final double DEFAULT_DON_GIA_GIO = 12000;
+    private static final double DEFAULT_DON_GIA_GIO = 30000;
     private static final String STATUS_AVAILABLE_NEW = "BINH_THUONG";
-    private static final String STATUS_AVAILABLE_LEGACY = "TRONG";
     private static final String STATUS_PLAYING_NEW = "DANG_CHOI";
-    private static final String STATUS_PLAYING_LEGACY = "DANG_SU_DUNG";
 
     private final MayPSDAO mayPSDAO = new MayPSDAO();
     private final LuotChoiDAO luotChoiDAO = new LuotChoiDAO();
@@ -52,6 +53,13 @@ public class HomeController extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
         String action = request.getParameter("action");
         int mayId = parseInt(request.getParameter("mayId"), -1);
+        NhanVien currentUser = getCurrentUser(request);
+
+        if (currentUser == null) {
+            setFlash(request, "Please login first.");
+            response.sendRedirect(request.getContextPath() + "/login");
+            return;
+        }
 
         if (mayId <= 0) {
             setFlash(request, "Machine id is invalid.");
@@ -60,7 +68,7 @@ public class HomeController extends HttpServlet {
         }
 
         if ("open".equalsIgnoreCase(action)) {
-            moMay(request, mayId);
+            moMay(request, mayId, currentUser);
         } else if ("close".equalsIgnoreCase(action)) {
             dongMay(request, mayId);
         } else {
@@ -70,9 +78,9 @@ public class HomeController extends HttpServlet {
         response.sendRedirect(request.getContextPath() + "/home");
     }
 
-    private void moMay(HttpServletRequest request, int mayId) {
+    private void moMay(HttpServletRequest request, int mayId, NhanVien currentUser) {
         Optional<MayPS> mayOpt = mayPSDAO.findById(mayId);
-        if (!mayOpt.isPresent()) {
+        if (mayOpt.isEmpty()) {
             setFlash(request, "Machine not found.");
             return;
         }
@@ -83,38 +91,69 @@ public class HomeController extends HttpServlet {
             return;
         }
 
-        int nhanVienId = parseInt(request.getParameter("nhanVienId"), 1);
-        boolean taoLuot = luotChoiDAO.batDauLuotChoi(mayId, nhanVienId, DEFAULT_DON_GIA_GIO);
-        // Use legacy-safe status value to match existing DB check constraints.
-        boolean updateMay = mayPSDAO.updateTinhTrang(mayId, STATUS_PLAYING_LEGACY);
+        Connection conn = null;
+        try {
+            conn = DBConnection.getConnection();
+            conn.setAutoCommit(false);
 
-        if (taoLuot && updateMay) {
-            setFlash(request, "Opened " + may.getTenMay() + " successfully.");
-        } else {
-            setFlash(request, "Cannot open machine now.");
+            boolean taoLuot = luotChoiDAO.batDauLuotChoi(conn, mayId, currentUser.getId(), DEFAULT_DON_GIA_GIO);
+            boolean updateMay = taoLuot && mayPSDAO.updateTinhTrang(conn, mayId, STATUS_PLAYING_NEW);
+
+            if (taoLuot && updateMay) {
+                conn.commit();
+                setFlash(request, "Opened " + may.getTenMay() + " successfully.");
+            } else {
+                rollbackQuietly(conn);
+                setFlash(request, "Cannot open machine now.");
+            }
+        } catch (Exception e) {
+            rollbackQuietly(conn);
+            // best-effort rollback happens only when the connection is still open inside the try block
+            setFlash(request, "Cannot open machine now: " + e.getMessage());
+        } finally {
+            closeQuietly(conn);
         }
     }
 
     private void dongMay(HttpServletRequest request, int mayId) {
         Optional<MayPS> mayOpt = mayPSDAO.findById(mayId);
-        if (!mayOpt.isPresent()) {
+        if (mayOpt.isEmpty()) {
             setFlash(request, "Machine not found.");
             return;
         }
 
-        Optional<Double> tongTienOpt = luotChoiDAO.ketThucLuotChoi(mayId);
-        if (!tongTienOpt.isPresent()) {
-            setFlash(request, "No active play session found.");
-            return;
-        }
+        Connection conn = null;
+        try {
+            conn = DBConnection.getConnection();
+            conn.setAutoCommit(false);
 
-        mayPSDAO.updateTinhTrang(mayId, STATUS_AVAILABLE_LEGACY);
-        String tienText = String.format(Locale.US, "%.0f", tongTienOpt.get());
-        setFlash(request, "Closed " + mayOpt.get().getTenMay() + ". Session total: " + tienText + " VND.");
+            Optional<Double> tongTienOpt = luotChoiDAO.ketThucLuotChoi(conn, mayId);
+            if (tongTienOpt.isEmpty()) {
+                rollbackQuietly(conn);
+                setFlash(request, "No active play session found.");
+                return;
+            }
+
+            boolean updateMay = mayPSDAO.updateTinhTrang(conn, mayId, STATUS_AVAILABLE_NEW);
+            if (!updateMay) {
+                rollbackQuietly(conn);
+                setFlash(request, "Cannot close machine now.");
+                return;
+            }
+
+            conn.commit();
+            String tienText = String.format(Locale.US, "%.0f", tongTienOpt.get());
+            setFlash(request, "Closed " + mayOpt.get().getTenMay() + ". Session total: " + tienText + " VND.");
+        } catch (Exception e) {
+            rollbackQuietly(conn);
+            setFlash(request, "Cannot close machine now: " + e.getMessage());
+        } finally {
+            closeQuietly(conn);
+        }
     }
 
     private static boolean isAvailableStatus(String tinhTrang) {
-        return STATUS_AVAILABLE_NEW.equals(tinhTrang) || STATUS_AVAILABLE_LEGACY.equals(tinhTrang);
+        return STATUS_AVAILABLE_NEW.equals(tinhTrang) || "TRONG".equals(tinhTrang);
     }
 
     private static int parseInt(String value, int defaultValue) {
@@ -127,5 +166,39 @@ public class HomeController extends HttpServlet {
 
     private static void setFlash(HttpServletRequest request, String message) {
         request.getSession(true).setAttribute("flashMessage", message);
+    }
+
+    private static NhanVien getCurrentUser(HttpServletRequest request) {
+        HttpSession session = request.getSession(false);
+        if (session == null) {
+            return null;
+        }
+        Object user = session.getAttribute("currentUser");
+        if (user instanceof NhanVien) {
+            return (NhanVien) user;
+        }
+        return null;
+    }
+
+    private static void rollbackQuietly(Connection conn) {
+        if (conn == null) {
+            return;
+        }
+        try {
+            conn.rollback();
+        } catch (Exception ignored) {
+            // ignore rollback errors
+        }
+    }
+
+    private static void closeQuietly(Connection conn) {
+        if (conn == null) {
+            return;
+        }
+        try {
+            conn.close();
+        } catch (Exception ignored) {
+            // ignore close errors
+        }
     }
 }

@@ -6,6 +6,7 @@ import utils.DBConnection;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -56,10 +57,17 @@ public class MayPSDAO {
     }
 
     public boolean updateTinhTrang(int id, String tinhTrang) {
+        try (Connection conn = DBConnection.getConnection()) {
+            return updateTinhTrang(conn, id, tinhTrang);
+        } catch (SQLException e) {
+            throw new RuntimeException("Cannot update machine status", e);
+        }
+    }
+
+    public boolean updateTinhTrang(Connection conn, int id, String tinhTrang) {
         String sql = "UPDATE mayps SET tinhtrang = ? WHERE id = ?";
 
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, tinhTrang);
             ps.setInt(2, id);
             return ps.executeUpdate() > 0;

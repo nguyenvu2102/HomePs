@@ -45,7 +45,15 @@ WAR output:
 
 ## Main pages
 
+- `http://localhost:8080/HomePS/login`
 - `http://localhost:8080/HomePS/home`
 - `http://localhost:8080/HomePS/dichvu`
 
 Deploy WAR to a Jakarta-compatible servlet container (for example Tomcat 10.1+).
+
+## Login and roles
+
+- `ADMIN`: can manage machines, services, events, and statistics.
+- `NHAN_VIEN`: can operate machines and view/invoice play sessions.
+- Login is done by selecting an active employee on the `/login` page.
+

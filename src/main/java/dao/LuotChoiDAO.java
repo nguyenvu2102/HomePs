@@ -6,6 +6,7 @@ import utils.DBConnection;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.time.Duration;
 import java.time.Instant;
@@ -51,11 +52,18 @@ public class LuotChoiDAO {
     }
 
     public boolean batDauLuotChoi(int mayId, int nhanVienId, double donGiaGio) {
+        try (Connection conn = DBConnection.getConnection()) {
+            return batDauLuotChoi(conn, mayId, nhanVienId, donGiaGio);
+        } catch (SQLException e) {
+            throw new RuntimeException("Cannot start play session", e);
+        }
+    }
+
+    public boolean batDauLuotChoi(Connection conn, int mayId, int nhanVienId, double donGiaGio) {
         String sql = "INSERT INTO luotchoi (mayid, nhanvienid, thoigianbatdau, dongiagio, tongtiengio, trangthai) " +
                 "VALUES (?, ?, NOW(), ?, 0, 'DANG_CHOI')";
 
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, mayId);
             ps.setInt(2, nhanVienId);
             ps.setDouble(3, donGiaGio);
@@ -66,7 +74,15 @@ public class LuotChoiDAO {
     }
 
     public Optional<Double> ketThucLuotChoi(int mayId) {
-        Optional<LuotChoi> activeOpt = findActiveByMayId(mayId);
+        try (Connection conn = DBConnection.getConnection()) {
+            return ketThucLuotChoi(conn, mayId);
+        } catch (SQLException e) {
+            throw new RuntimeException("Cannot stop play session", e);
+        }
+    }
+
+    public Optional<Double> ketThucLuotChoi(Connection conn, int mayId) {
+        Optional<LuotChoi> activeOpt = findActiveByMayId(conn, mayId);
         if (!activeOpt.isPresent()) {
             return Optional.empty();
         }
@@ -75,8 +91,7 @@ public class LuotChoiDAO {
         double tongTien = tinhTien(active.getThoiGianBatDau(), active.getDonGiaGio());
 
         String sql = "UPDATE luotchoi SET thoigianketthuc = NOW(), tongtiengio = ?, trangthai = 'DA_KET_THUC' WHERE id = ?";
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setDouble(1, tongTien);
             ps.setInt(2, active.getId());
             ps.executeUpdate();
@@ -97,6 +112,24 @@ public class LuotChoiDAO {
                 rs.getDouble("tongtiengio"),
                 rs.getString("trangthai")
         );
+    }
+
+    private Optional<LuotChoi> findActiveByMayId(Connection conn, int mayId) {
+        String sql = "SELECT id, mayid, nhanvienid, thoigianbatdau, thoigianketthuc, dongiagio, tongtiengio, trangthai " +
+                "FROM luotchoi WHERE mayid = ? AND trangthai = 'DANG_CHOI' ORDER BY thoigianbatdau DESC LIMIT 1";
+
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, mayId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return Optional.of(mapRow(rs));
+                }
+            }
+        } catch (Exception e) {
+            throw new RuntimeException("Cannot load active play session", e);
+        }
+
+        return Optional.empty();
     }
 
     private static double tinhTien(Timestamp batDau, double donGiaGio) {

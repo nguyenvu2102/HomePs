@@ -35,6 +35,10 @@ INSERT INTO nhanvien (id, tennhanvien, sodienthoai, chucvu, trangthai)
 VALUES (1, 'Admin', '0000000000', 'TRONG_MAY', 'DANG_LAM')
 ON CONFLICT (id) DO NOTHING;
 
+INSERT INTO nhanvien (id, tennhanvien, sodienthoai, chucvu, trangthai)
+VALUES (2, 'Nhan vien 1', '0000000001', 'NHAN_VIEN', 'DANG_LAM')
+ON CONFLICT (id) DO NOTHING;
+
 INSERT INTO mayps (tenmay, tinhtrang, ghichu)
 SELECT 'May ' || i, 'BINH_THUONG', NULL
 FROM generate_series(1, 12) AS i

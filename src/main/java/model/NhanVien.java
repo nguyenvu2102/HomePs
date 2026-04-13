@@ -27,4 +27,28 @@ public class NhanVien {
     public void setChucVu(String chucVu) { this.chucVu = chucVu; }
     public String getTrangThai() { return trangThai; }
     public void setTrangThai(String trangThai) { this.trangThai = trangThai; }
+
+    public String getVaiTro() {
+        return normalizeVaiTro(chucVu);
+    }
+
+    public boolean isAdmin() {
+        return "ADMIN".equalsIgnoreCase(getVaiTro());
+    }
+
+    public boolean isNhanVien() {
+        return "NHAN_VIEN".equalsIgnoreCase(getVaiTro());
+    }
+
+    public static String normalizeVaiTro(String chucVu) {
+        if (chucVu == null) {
+            return "NHAN_VIEN";
+        }
+
+        String value = chucVu.trim().toUpperCase();
+        if ("ADMIN".equals(value) || "QUAN_LY".equals(value) || "TRONG_MAY".equals(value)) {
+            return "ADMIN";
+        }
+        return "NHAN_VIEN";
+    }
 }

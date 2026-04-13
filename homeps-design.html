@@ -1,0 +1,2054 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HomePS - Gaming Café Management System</title>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg-primary: #0a0a0f;
+  --bg-secondary: #12121a;
+  --bg-card: #1a1a2e;
+  --bg-card-hover: #222240;
+  --bg-sidebar: #0e0e18;
+  --accent-blue: #3b82f6;
+  --accent-blue-dim: #1e40af;
+  --accent-emerald: #10b981;
+  --accent-emerald-dim: #065f46;
+  --accent-amber: #f59e0b;
+  --accent-amber-dim: #92400e;
+  --accent-red: #ef4444;
+  --accent-red-dim: #7f1d1d;
+  --accent-purple: #8b5cf6;
+  --accent-purple-dim: #4c1d95;
+  --accent-cyan: #06b6d4;
+  --text-primary: #f1f5f9;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+  --border-color: #1e293b;
+  --border-light: #334155;
+  --radius: 12px;
+  --radius-sm: 8px;
+  --radius-lg: 16px;
+  --shadow: 0 4px 24px rgba(0,0,0,0.4);
+  --font: 'Be Vietnam Pro', sans-serif;
+  --mono: 'JetBrains Mono', monospace;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: var(--font);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  overflow: hidden;
+  height: 100vh;
+}
+
+.app { display: flex; height: 100vh; }
+
+/* Sidebar */
+.sidebar {
+  width: 260px;
+  background: var(--bg-sidebar);
+  border-right: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+}
+.sidebar-brand {
+  padding: 24px 20px;
+  border-bottom: 1px solid var(--border-color);
+}
+.sidebar-brand h1 {
+  font-size: 22px;
+  font-weight: 800;
+  background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  letter-spacing: -0.5px;
+}
+.sidebar-brand .subtitle {
+  font-size: 11px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-top: 4px;
+}
+.sidebar-nav { flex: 1; padding: 12px 10px; overflow-y: auto; }
+.nav-section {
+  font-size: 10px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  padding: 16px 12px 8px;
+  font-weight: 600;
+}
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  transition: all 0.2s;
+  margin-bottom: 2px;
+}
+.nav-item:hover { background: var(--bg-card); color: var(--text-primary); }
+.nav-item.active {
+  background: linear-gradient(135deg, rgba(59,130,246,0.15), rgba(139,92,246,0.1));
+  color: var(--accent-blue);
+  border: 1px solid rgba(59,130,246,0.2);
+}
+.nav-item svg { width: 18px; height: 18px; flex-shrink: 0; }
+.nav-badge {
+  margin-left: auto;
+  background: var(--accent-red);
+  color: white;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 10px;
+}
+.sidebar-footer {
+  padding: 16px 20px;
+  border-top: 1px solid var(--border-color);
+}
+.user-info { display: flex; align-items: center; gap: 10px; }
+.user-avatar {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; font-weight: 700;
+}
+.user-name { font-size: 13px; font-weight: 600; }
+.user-role { font-size: 11px; color: var(--text-muted); }
+
+/* Main content */
+.main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+/* Header */
+.header {
+  padding: 20px 32px;
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--bg-secondary);
+}
+.header-left h2 {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+}
+.header-left p {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-top: 2px;
+}
+.header-actions { display: flex; gap: 10px; align-items: center; }
+.header-clock {
+  font-family: var(--mono);
+  font-size: 14px;
+  color: var(--accent-cyan);
+  background: rgba(6,182,212,0.1);
+  padding: 6px 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(6,182,212,0.2);
+}
+.btn {
+  padding: 8px 16px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font);
+}
+.btn-primary {
+  background: var(--accent-blue);
+  color: white;
+}
+.btn-primary:hover { background: #2563eb; transform: translateY(-1px); }
+.btn-success { background: var(--accent-emerald); color: white; }
+.btn-success:hover { background: #059669; }
+.btn-danger { background: var(--accent-red); color: white; }
+.btn-danger:hover { background: #dc2626; }
+.btn-ghost {
+  background: transparent;
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
+}
+.btn-ghost:hover { background: var(--bg-card); color: var(--text-primary); }
+.btn-warning { background: var(--accent-amber); color: #000; }
+.btn svg { width: 16px; height: 16px; }
+
+/* Content */
+.content { flex: 1; overflow-y: auto; padding: 24px 32px; }
+
+/* Page tabs */
+.page-tabs { display: none; }
+
+/* Machine Grid */
+.machine-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 16px;
+}
+.machine-card {
+  aspect-ratio: 1;
+  border-radius: var(--radius);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.3s;
+  border: 2px solid transparent;
+  position: relative;
+  overflow: hidden;
+}
+.machine-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: 0.1;
+  background: radial-gradient(circle at 50% 0%, currentColor, transparent 70%);
+}
+.machine-card:hover { transform: translateY(-4px); box-shadow: var(--shadow); }
+.machine-card.selected { border-color: var(--accent-blue); box-shadow: 0 0 20px rgba(59,130,246,0.3); }
+.machine-card.vacant {
+  background: var(--bg-card);
+  border-color: var(--border-color);
+  color: var(--text-secondary);
+}
+.machine-card.in-use {
+  background: linear-gradient(135deg, var(--accent-emerald-dim), rgba(16,185,129,0.15));
+  border-color: rgba(16,185,129,0.3);
+  color: var(--accent-emerald);
+}
+.machine-card.maintenance {
+  background: linear-gradient(135deg, var(--accent-red-dim), rgba(239,68,68,0.15));
+  border-color: rgba(239,68,68,0.3);
+  color: var(--accent-red);
+}
+.machine-card.paused {
+  background: linear-gradient(135deg, var(--accent-amber-dim), rgba(245,158,11,0.15));
+  border-color: rgba(245,158,11,0.3);
+  color: var(--accent-amber);
+}
+.machine-id {
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: -1px;
+  position: relative;
+}
+.machine-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  font-weight: 600;
+  opacity: 0.8;
+}
+.machine-time {
+  font-family: var(--mono);
+  font-size: 12px;
+  opacity: 0.7;
+  margin-top: 2px;
+}
+.machine-customer {
+  font-size: 11px;
+  opacity: 0.6;
+  max-width: 80%;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Stats Summary Row */
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+}
+.stat-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  padding: 18px 20px;
+  position: relative;
+  overflow: hidden;
+}
+.stat-card::after {
+  content: '';
+  position: absolute;
+  top: 0; right: 0;
+  width: 80px; height: 80px;
+  border-radius: 50%;
+  opacity: 0.05;
+}
+.stat-card.blue::after { background: var(--accent-blue); }
+.stat-card.green::after { background: var(--accent-emerald); }
+.stat-card.amber::after { background: var(--accent-amber); }
+.stat-card.red::after { background: var(--accent-red); }
+.stat-label { font-size: 12px; color: var(--text-muted); font-weight: 500; }
+.stat-value {
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: -1px;
+  margin-top: 4px;
+}
+.stat-card.blue .stat-value { color: var(--accent-blue); }
+.stat-card.green .stat-value { color: var(--accent-emerald); }
+.stat-card.amber .stat-value { color: var(--accent-amber); }
+.stat-card.red .stat-value { color: var(--accent-red); }
+.stat-change { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+
+/* Right Panel */
+.right-panel {
+  width: 360px;
+  background: var(--bg-secondary);
+  border-left: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  transition: all 0.3s;
+}
+.right-panel.hidden { width: 0; overflow: hidden; border: none; }
+.panel-header {
+  padding: 18px 20px;
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.panel-header h3 { font-size: 16px; font-weight: 700; }
+.panel-close {
+  width: 28px; height: 28px;
+  border-radius: 6px;
+  border: none;
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+}
+.panel-body { flex: 1; overflow-y: auto; padding: 20px; }
+.panel-footer {
+  padding: 16px 20px;
+  border-top: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Detail info */
+.detail-section { margin-bottom: 20px; }
+.detail-section h4 {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--text-muted);
+  margin-bottom: 10px;
+  font-weight: 600;
+}
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  font-size: 13px;
+}
+.detail-row .label { color: var(--text-secondary); }
+.detail-row .value { font-weight: 600; }
+
+/* Status badge */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.badge-green { background: rgba(16,185,129,0.15); color: var(--accent-emerald); }
+.badge-red { background: rgba(239,68,68,0.15); color: var(--accent-red); }
+.badge-amber { background: rgba(245,158,11,0.15); color: var(--accent-amber); }
+.badge-blue { background: rgba(59,130,246,0.15); color: var(--accent-blue); }
+.badge-purple { background: rgba(139,92,246,0.15); color: var(--accent-purple); }
+.badge-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+/* Input / Form */
+.form-group { margin-bottom: 16px; }
+.form-label {
+  display: block;
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+  font-weight: 500;
+}
+.form-input, .form-select {
+  width: 100%;
+  padding: 10px 12px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-size: 13px;
+  font-family: var(--font);
+  outline: none;
+  transition: border-color 0.2s;
+}
+.form-input:focus, .form-select:focus { border-color: var(--accent-blue); }
+.form-select { cursor: pointer; }
+
+/* Tables */
+.data-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+.data-table th {
+  text-align: left;
+  padding: 10px 16px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-muted);
+  font-weight: 600;
+  border-bottom: 1px solid var(--border-color);
+  background: var(--bg-secondary);
+  position: sticky;
+  top: 0;
+}
+.data-table td {
+  padding: 12px 16px;
+  font-size: 13px;
+  border-bottom: 1px solid var(--border-color);
+}
+.data-table tr:hover td { background: var(--bg-card); }
+
+/* Service items in order */
+.order-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  background: var(--bg-card);
+  border-radius: var(--radius-sm);
+  margin-bottom: 8px;
+  border: 1px solid var(--border-color);
+}
+.order-item-icon {
+  width: 36px; height: 36px;
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px;
+}
+.order-item-info { flex: 1; }
+.order-item-name { font-size: 13px; font-weight: 600; }
+.order-item-qty { font-size: 11px; color: var(--text-muted); }
+.order-item-price { font-size: 13px; font-weight: 600; color: var(--accent-cyan); font-family: var(--mono); }
+
+/* Service menu grid */
+.service-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 12px;
+}
+.service-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  padding: 16px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.service-card:hover { border-color: var(--accent-blue); transform: translateY(-2px); }
+.service-emoji { font-size: 28px; margin-bottom: 8px; }
+.service-name { font-size: 14px; font-weight: 600; }
+.service-price { font-size: 13px; color: var(--accent-cyan); font-family: var(--mono); margin-top: 4px; }
+.service-category { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+/* Event cards */
+.event-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  padding: 20px;
+  margin-bottom: 12px;
+  position: relative;
+  overflow: hidden;
+}
+.event-card::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 4px;
+}
+.event-card.active::before { background: var(--accent-emerald); }
+.event-card.upcoming::before { background: var(--accent-blue); }
+.event-card.expired::before { background: var(--text-muted); }
+.event-header { display: flex; justify-content: space-between; align-items: flex-start; }
+.event-title { font-size: 15px; font-weight: 700; }
+.event-discount {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--accent-emerald);
+}
+.event-meta { font-size: 12px; color: var(--text-muted); margin-top: 6px; }
+.event-period {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-top: 8px;
+  background: rgba(255,255,255,0.05);
+  padding: 4px 10px;
+  border-radius: 4px;
+}
+
+/* Chart placeholder */
+.chart-container {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  padding: 24px;
+  margin-bottom: 20px;
+}
+.chart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+.chart-title { font-size: 15px; font-weight: 700; }
+.chart-legend { display: flex; gap: 16px; }
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+.legend-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+}
+.chart-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  height: 200px;
+  padding-top: 10px;
+}
+.chart-bar-group {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  height: 100%;
+  justify-content: flex-end;
+}
+.chart-bar {
+  width: 100%;
+  max-width: 36px;
+  border-radius: 4px 4px 0 0;
+  transition: height 1s ease;
+}
+.chart-bar.blue { background: linear-gradient(0deg, var(--accent-blue-dim), var(--accent-blue)); }
+.chart-bar.green { background: linear-gradient(0deg, var(--accent-emerald-dim), var(--accent-emerald)); }
+.chart-bar.purple { background: linear-gradient(0deg, var(--accent-purple-dim), var(--accent-purple)); }
+.chart-bar-label { font-size: 10px; color: var(--text-muted); }
+
+/* Mini chart in stat card */
+.mini-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 32px;
+  margin-top: 8px;
+}
+.mini-bar {
+  flex: 1;
+  border-radius: 2px;
+  min-width: 4px;
+}
+
+/* Tabs */
+.tab-bar {
+  display: flex;
+  gap: 4px;
+  background: var(--bg-card);
+  padding: 4px;
+  border-radius: var(--radius-sm);
+  margin-bottom: 20px;
+  width: fit-content;
+}
+.tab-btn {
+  padding: 8px 18px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  font-family: var(--font);
+  transition: all 0.2s;
+}
+.tab-btn.active {
+  background: var(--accent-blue);
+  color: white;
+}
+.tab-btn:hover:not(.active) { color: var(--text-primary); }
+
+/* Invoice / Receipt */
+.receipt {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  max-width: 420px;
+  overflow: hidden;
+}
+.receipt-header {
+  padding: 24px;
+  text-align: center;
+  border-bottom: 1px dashed var(--border-color);
+}
+.receipt-header h3 { font-size: 18px; font-weight: 800; }
+.receipt-header p { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+.receipt-body { padding: 20px 24px; }
+.receipt-line {
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 0;
+  font-size: 13px;
+}
+.receipt-line.total {
+  border-top: 1px solid var(--border-color);
+  margin-top: 10px;
+  padding-top: 12px;
+  font-size: 16px;
+  font-weight: 700;
+}
+.receipt-line.discount { color: var(--accent-emerald); }
+.receipt-footer {
+  padding: 16px 24px;
+  border-top: 1px dashed var(--border-color);
+  text-align: center;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+/* Login */
+.login-page {
+  display: flex;
+  height: 100vh;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-primary);
+  position: relative;
+}
+.login-bg {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 20% 50%, rgba(59,130,246,0.08), transparent 50%),
+    radial-gradient(ellipse at 80% 50%, rgba(139,92,246,0.08), transparent 50%);
+}
+.login-card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 40px;
+  width: 400px;
+  position: relative;
+  box-shadow: var(--shadow);
+}
+.login-logo {
+  font-size: 32px;
+  font-weight: 800;
+  text-align: center;
+  background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 8px;
+}
+.login-subtitle {
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 13px;
+  margin-bottom: 32px;
+}
+.login-card .form-input { margin-bottom: 12px; padding: 12px 14px; }
+.login-card .btn { width: 100%; justify-content: center; padding: 12px; margin-top: 8px; }
+
+/* Page visibility */
+.page { display: none !important; flex-direction: column; height: 100%; }
+.page.active { display: flex !important; }
+
+/* Flex helpers */
+.flex { display: flex; }
+.flex-col { flex-direction: column; }
+.gap-12 { gap: 12px; }
+.gap-16 { gap: 16px; }
+.items-center { align-items: center; }
+.justify-between { justify-content: space-between; }
+.flex-1 { flex: 1; }
+.w-full { width: 100%; }
+.text-right { text-align: right; }
+.mt-12 { margin-top: 12px; }
+.mt-20 { margin-top: 20px; }
+.mb-16 { margin-bottom: 16px; }
+.mb-20 { margin-bottom: 20px; }
+
+/* Divider */
+.divider {
+  height: 1px;
+  background: var(--border-color);
+  margin: 16px 0;
+}
+
+/* Section header */
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+.section-title { font-size: 15px; font-weight: 700; }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--border-light); }
+
+/* Animation */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-in { animation: fadeIn 0.3s ease forwards; }
+
+/* Filter pills */
+.filter-pills {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+.filter-pill {
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  border: 1px solid var(--border-color);
+  background: transparent;
+  color: var(--text-secondary);
+  font-family: var(--font);
+  transition: all 0.2s;
+}
+.filter-pill.active {
+  background: var(--accent-blue);
+  border-color: var(--accent-blue);
+  color: white;
+}
+.filter-pill:hover:not(.active) { border-color: var(--text-muted); }
+
+/* Search */
+.search-box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  padding: 0 12px;
+}
+.search-box svg { color: var(--text-muted); width: 16px; height: 16px; flex-shrink: 0; }
+.search-box input {
+  flex: 1;
+  padding: 10px 0;
+  background: none;
+  border: none;
+  color: var(--text-primary);
+  font-size: 13px;
+  font-family: var(--font);
+  outline: none;
+}
+.search-box input::placeholder { color: var(--text-muted); }
+
+/* Donut chart CSS */
+.donut-chart {
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.donut-center {
+  position: absolute;
+  text-align: center;
+}
+.donut-center .donut-value { font-size: 22px; font-weight: 800; }
+.donut-center .donut-label { font-size: 10px; color: var(--text-muted); }
+
+/* Responsive grid for stats */
+.stats-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+/* Screen label for design reference */
+.screen-label {
+  position: fixed;
+  bottom: 16px;
+  right: 16px;
+  background: rgba(139,92,246,0.9);
+  color: white;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 6px 14px;
+  border-radius: 20px;
+  z-index: 1000;
+  letter-spacing: 0.5px;
+}
+</style>
+</head>
+<body>
+
+<!-- ============================================ -->
+<!-- SCREEN 0: LOGIN -->
+<!-- ============================================ -->
+<div id="login-screen" class="login-page" style="display: none;">
+  <div class="login-bg"></div>
+  <div class="login-card animate-in">
+    <div class="login-logo">HomePS</div>
+    <div class="login-subtitle">Hệ thống quản lý cửa hàng game PS</div>
+    <div class="form-group">
+      <label class="form-label">Tài khoản</label>
+      <input class="form-input" type="text" placeholder="Nhập tên đăng nhập" value="admin">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Mật khẩu</label>
+      <input class="form-input" type="password" placeholder="••••••••" value="password">
+    </div>
+    <button class="btn btn-primary" onclick="showApp()" style="width:100%;justify-content:center;padding:12px;margin-top:8px;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+      Đăng nhập
+    </button>
+    <div style="text-align:center;margin-top:16px;font-size:11px;color:var(--text-muted);">HomePS Management System v2.0</div>
+  </div>
+  <div class="screen-label">UC26 — Đăng nhập hệ thống</div>
+</div>
+
+<!-- ============================================ -->
+<!-- MAIN APP -->
+<!-- ============================================ -->
+<div id="main-app" class="app">
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="sidebar-brand">
+      <h1>HomePS</h1>
+      <div class="subtitle">Gaming Management</div>
+    </div>
+    <div class="sidebar-nav">
+      <div class="nav-section">Vận hành</div>
+      <div class="nav-item active" onclick="switchPage('machines')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+        Quản lý máy PS
+        <span class="nav-badge">3</span>
+      </div>
+      <div class="nav-item" onclick="switchPage('services')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8h1a4 4 0 010 8h-1"/><path d="M2 8h16v9a4 4 0 01-4 4H6a4 4 0 01-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>
+        Dịch vụ & Thực đơn
+      </div>
+      <div class="nav-item" onclick="switchPage('invoices')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        Hóa đơn
+      </div>
+
+      <div class="nav-section">Marketing</div>
+      <div class="nav-item" onclick="switchPage('events')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+        Sự kiện giảm giá
+      </div>
+
+      <div class="nav-section">Báo cáo</div>
+      <div class="nav-item" onclick="switchPage('stats')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        Thống kê doanh thu
+      </div>
+      <div class="nav-item" onclick="switchPage('history')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        Lịch sử sử dụng
+      </div>
+
+      <div class="nav-section">Hệ thống</div>
+      <div class="nav-item" onclick="switchPage('admin')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+        Quản trị hệ thống
+      </div>
+    </div>
+    <div class="sidebar-footer">
+      <div class="user-info">
+        <div class="user-avatar">NV</div>
+        <div>
+          <div class="user-name">Nguyễn Văn A</div>
+          <div class="user-role">Owner</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN CONTENT -->
+  <div class="main">
+    <!-- ======================== -->
+    <!-- PAGE: MACHINES -->
+    <!-- ======================== -->
+    <div id="page-machines" class="page active" style="display:flex;flex-direction:column;height:100%;">
+      <div class="header">
+        <div class="header-left">
+          <h2>Quản lý máy PS</h2>
+          <p>Theo dõi và quản lý tất cả máy chơi game</p>
+        </div>
+        <div class="header-actions">
+          <div class="header-clock" id="live-clock">14:35:22</div>
+          <button class="btn btn-ghost" onclick="togglePanel()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+            Chi tiết
+          </button>
+          <button class="btn btn-primary">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Thêm máy mới
+          </button>
+        </div>
+      </div>
+      <div style="flex:1;display:flex;overflow:hidden;">
+        <div class="content" style="flex:1;">
+          <!-- Stats row -->
+          <div class="stats-row">
+            <div class="stat-card blue">
+              <div class="stat-label">Tổng máy</div>
+              <div class="stat-value">12</div>
+              <div class="stat-change">+2 máy mới tháng này</div>
+            </div>
+            <div class="stat-card green">
+              <div class="stat-label">Đang hoạt động</div>
+              <div class="stat-value">5</div>
+              <div class="mini-bars">
+                <div class="mini-bar" style="height:60%;background:var(--accent-emerald)"></div>
+                <div class="mini-bar" style="height:80%;background:var(--accent-emerald)"></div>
+                <div class="mini-bar" style="height:45%;background:var(--accent-emerald)"></div>
+                <div class="mini-bar" style="height:90%;background:var(--accent-emerald)"></div>
+                <div class="mini-bar" style="height:70%;background:var(--accent-emerald)"></div>
+                <div class="mini-bar" style="height:55%;background:var(--accent-emerald)"></div>
+                <div class="mini-bar" style="height:85%;background:var(--accent-emerald)"></div>
+              </div>
+            </div>
+            <div class="stat-card amber">
+              <div class="stat-label">Trống</div>
+              <div class="stat-value">5</div>
+              <div class="stat-change">Sẵn sàng phục vụ</div>
+            </div>
+            <div class="stat-card red">
+              <div class="stat-label">Bảo trì / Hỏng</div>
+              <div class="stat-value">2</div>
+              <div class="stat-change">PS-06, PS-09</div>
+            </div>
+          </div>
+
+          <!-- Filter -->
+          <div class="filter-pills">
+            <button class="filter-pill active">Tất cả (12)</button>
+            <button class="filter-pill">🟢 Đang chơi (5)</button>
+            <button class="filter-pill">⚪ Trống (5)</button>
+            <button class="filter-pill">🔴 Bảo trì (2)</button>
+          </div>
+
+          <!-- Machine grid -->
+          <div class="machine-grid">
+            <div class="machine-card vacant" onclick="selectMachine(1)">
+              <div class="machine-id">PS 01</div>
+              <div class="machine-label">Trống</div>
+            </div>
+            <div class="machine-card in-use selected" onclick="selectMachine(2)">
+              <div class="machine-id">PS 02</div>
+              <div class="machine-label">Đang chơi</div>
+              <div class="machine-time">2h 35m</div>
+              <div class="machine-customer">Nguyễn Minh</div>
+            </div>
+            <div class="machine-card in-use" onclick="selectMachine(3)">
+              <div class="machine-id">PS 03</div>
+              <div class="machine-label">Đang chơi</div>
+              <div class="machine-time">1h 12m</div>
+              <div class="machine-customer">Trần Văn B</div>
+            </div>
+            <div class="machine-card vacant" onclick="selectMachine(4)">
+              <div class="machine-id">PS 04</div>
+              <div class="machine-label">Trống</div>
+            </div>
+            <div class="machine-card in-use" onclick="selectMachine(5)">
+              <div class="machine-id">PS 05</div>
+              <div class="machine-label">Đang chơi</div>
+              <div class="machine-time">0h 45m</div>
+              <div class="machine-customer">Lê Hoàng C</div>
+            </div>
+            <div class="machine-card maintenance" onclick="selectMachine(6)">
+              <div class="machine-id">PS 06</div>
+              <div class="machine-label">Bảo trì</div>
+            </div>
+            <div class="machine-card vacant" onclick="selectMachine(7)">
+              <div class="machine-id">PS 07</div>
+              <div class="machine-label">Trống</div>
+            </div>
+            <div class="machine-card in-use" onclick="selectMachine(8)">
+              <div class="machine-id">PS 08</div>
+              <div class="machine-label">Đang chơi</div>
+              <div class="machine-time">3h 05m</div>
+              <div class="machine-customer">Phạm Quốc D</div>
+            </div>
+            <div class="machine-card vacant" onclick="selectMachine(9)">
+              <div class="machine-id">PS 09</div>
+              <div class="machine-label">Trống</div>
+            </div>
+            <div class="machine-card in-use" onclick="selectMachine(10)">
+              <div class="machine-id">PS 10</div>
+              <div class="machine-label">Đang chơi</div>
+              <div class="machine-time">0h 20m</div>
+              <div class="machine-customer">Hoàng Thị E</div>
+            </div>
+            <div class="machine-card vacant" onclick="selectMachine(11)">
+              <div class="machine-id">PS 11</div>
+              <div class="machine-label">Trống</div>
+            </div>
+            <div class="machine-card maintenance" onclick="selectMachine(12)">
+              <div class="machine-id">PS 12</div>
+              <div class="machine-label">Hỏng</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- RIGHT PANEL: Machine Details -->
+        <div class="right-panel" id="right-panel">
+          <div class="panel-header">
+            <h3>Chi tiết PS 02</h3>
+            <button class="panel-close" onclick="togglePanel()">✕</button>
+          </div>
+          <div class="panel-body">
+            <div class="detail-section">
+              <div style="text-align:center;margin-bottom:16px;">
+                <div style="font-size:40px;font-weight:800;color:var(--accent-emerald);">PS 02</div>
+                <span class="badge badge-green"><span class="badge-dot"></span>Đang chơi</span>
+              </div>
+            </div>
+
+            <div class="detail-section">
+              <h4>Thông tin lượt chơi</h4>
+              <div class="detail-row">
+                <span class="label">CCCD khách</span>
+                <span class="value" style="font-family:var(--mono);">079****5678</span>
+              </div>
+              <div class="detail-row">
+                <span class="label">Bắt đầu</span>
+                <span class="value">11:58 AM</span>
+              </div>
+              <div class="detail-row">
+                <span class="label">Thời gian chơi</span>
+                <span class="value" style="color:var(--accent-cyan);font-family:var(--mono);">2h 35m</span>
+              </div>
+              <div class="detail-row">
+                <span class="label">Tiền giờ (30.000đ/h)</span>
+                <span class="value" style="color:var(--accent-amber);font-family:var(--mono);">77.500đ</span>
+              </div>
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="detail-section">
+              <div class="section-header">
+                <h4 style="margin:0;">Dịch vụ đã gọi</h4>
+                <button class="btn btn-ghost" style="padding:4px 10px;font-size:11px;" onclick="switchPage('services')">+ Gọi thêm</button>
+              </div>
+              <div class="order-item">
+                <div class="order-item-icon" style="background:rgba(245,158,11,0.15);">🍜</div>
+                <div class="order-item-info">
+                  <div class="order-item-name">Mì xào bò</div>
+                  <div class="order-item-qty">x1 • 35.000đ</div>
+                </div>
+                <div class="order-item-price">35.000đ</div>
+              </div>
+              <div class="order-item">
+                <div class="order-item-icon" style="background:rgba(6,182,212,0.15);">🥤</div>
+                <div class="order-item-info">
+                  <div class="order-item-name">Trà đào</div>
+                  <div class="order-item-qty">x2 • 20.000đ/ly</div>
+                </div>
+                <div class="order-item-price">40.000đ</div>
+              </div>
+              <div class="order-item">
+                <div class="order-item-icon" style="background:rgba(139,92,246,0.15);">🍿</div>
+                <div class="order-item-info">
+                  <div class="order-item-name">Bắp rang bơ</div>
+                  <div class="order-item-qty">x1 • 15.000đ</div>
+                </div>
+                <div class="order-item-price">15.000đ</div>
+              </div>
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="detail-section">
+              <h4>Tổng tạm tính</h4>
+              <div class="detail-row">
+                <span class="label">Tiền giờ chơi</span>
+                <span class="value" style="font-family:var(--mono);">77.500đ</span>
+              </div>
+              <div class="detail-row">
+                <span class="label">Tiền dịch vụ</span>
+                <span class="value" style="font-family:var(--mono);">90.000đ</span>
+              </div>
+              <div class="detail-row" style="color:var(--accent-emerald);">
+                <span class="label">Giảm giá (Khung giờ trưa -20%)</span>
+                <span class="value" style="font-family:var(--mono);">-15.500đ</span>
+              </div>
+              <div class="detail-row" style="font-size:18px;font-weight:800;padding-top:10px;border-top:1px solid var(--border-color);margin-top:8px;">
+                <span>Tổng cộng</span>
+                <span style="color:var(--accent-amber);font-family:var(--mono);">152.000đ</span>
+              </div>
+            </div>
+          </div>
+          <div class="panel-footer">
+            <button class="btn btn-warning w-full" style="justify-content:center;padding:12px;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+              Thanh toán & Kết thúc
+            </button>
+            <div style="display:flex;gap:8px;">
+              <button class="btn btn-ghost flex-1" style="justify-content:center;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><circle cx="12" cy="12" r="10"/><line x1="10" y1="15" x2="10" y2="9"/><line x1="14" y1="15" x2="14" y2="9"/></svg>
+                Tạm dừng
+              </button>
+              <button class="btn btn-ghost flex-1" style="justify-content:center;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 014-4h14"/></svg>
+                Chuyển máy
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="screen-label">UC01-UC09 — Quản lý máy PS & Lượt chơi</div>
+    </div>
+
+    <!-- ======================== -->
+    <!-- PAGE: SERVICES -->
+    <!-- ======================== -->
+    <div id="page-services" class="page" style="display:none;flex-direction:column;height:100%;">
+      <div class="header">
+        <div class="header-left">
+          <h2>Dịch vụ & Thực đơn</h2>
+          <p>Quản lý đồ ăn, đồ uống phục vụ tại chỗ</p>
+        </div>
+        <div class="header-actions">
+          <div class="search-box" style="width:250px;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input placeholder="Tìm kiếm dịch vụ...">
+          </div>
+          <button class="btn btn-primary">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Thêm dịch vụ
+          </button>
+        </div>
+      </div>
+      <div class="content" style="flex:1;overflow-y:auto;">
+        <div class="tab-bar">
+          <button class="tab-btn active">Tất cả</button>
+          <button class="tab-btn">🍜 Đồ ăn</button>
+          <button class="tab-btn">🥤 Đồ uống</button>
+          <button class="tab-btn">🍿 Snack</button>
+        </div>
+
+        <div class="service-grid">
+          <div class="service-card">
+            <div class="service-emoji">🍜</div>
+            <div class="service-name">Mì xào bò</div>
+            <div class="service-price">35.000đ</div>
+            <div class="service-category">Đồ ăn</div>
+            <span class="badge badge-green" style="margin-top:8px;"><span class="badge-dot"></span>Đang bán</span>
+          </div>
+          <div class="service-card">
+            <div class="service-emoji">🍛</div>
+            <div class="service-name">Cơm chiên dương châu</div>
+            <div class="service-price">40.000đ</div>
+            <div class="service-category">Đồ ăn</div>
+            <span class="badge badge-green" style="margin-top:8px;"><span class="badge-dot"></span>Đang bán</span>
+          </div>
+          <div class="service-card">
+            <div class="service-emoji">🌭</div>
+            <div class="service-name">Hotdog phô mai</div>
+            <div class="service-price">25.000đ</div>
+            <div class="service-category">Đồ ăn</div>
+            <span class="badge badge-green" style="margin-top:8px;"><span class="badge-dot"></span>Đang bán</span>
+          </div>
+          <div class="service-card">
+            <div class="service-emoji">🥤</div>
+            <div class="service-name">Trà đào cam sả</div>
+            <div class="service-price">20.000đ</div>
+            <div class="service-category">Đồ uống</div>
+            <span class="badge badge-green" style="margin-top:8px;"><span class="badge-dot"></span>Đang bán</span>
+          </div>
+          <div class="service-card">
+            <div class="service-emoji">☕</div>
+            <div class="service-name">Cà phê sữa đá</div>
+            <div class="service-price">18.000đ</div>
+            <div class="service-category">Đồ uống</div>
+            <span class="badge badge-green" style="margin-top:8px;"><span class="badge-dot"></span>Đang bán</span>
+          </div>
+          <div class="service-card">
+            <div class="service-emoji">🧃</div>
+            <div class="service-name">Nước ép cam</div>
+            <div class="service-price">22.000đ</div>
+            <div class="service-category">Đồ uống</div>
+            <span class="badge badge-green" style="margin-top:8px;"><span class="badge-dot"></span>Đang bán</span>
+          </div>
+          <div class="service-card">
+            <div class="service-emoji">🥫</div>
+            <div class="service-name">Coca Cola</div>
+            <div class="service-price">12.000đ</div>
+            <div class="service-category">Đồ uống</div>
+            <span class="badge badge-green" style="margin-top:8px;"><span class="badge-dot"></span>Đang bán</span>
+          </div>
+          <div class="service-card">
+            <div class="service-emoji">🍿</div>
+            <div class="service-name">Bắp rang bơ</div>
+            <div class="service-price">15.000đ</div>
+            <div class="service-category">Snack</div>
+            <span class="badge badge-green" style="margin-top:8px;"><span class="badge-dot"></span>Đang bán</span>
+          </div>
+          <div class="service-card">
+            <div class="service-emoji">🍪</div>
+            <div class="service-name">Bánh quy hỗn hợp</div>
+            <div class="service-price">10.000đ</div>
+            <div class="service-category">Snack</div>
+            <span class="badge badge-red" style="margin-top:8px;"><span class="badge-dot"></span>Hết hàng</span>
+          </div>
+          <div class="service-card">
+            <div class="service-emoji">🧋</div>
+            <div class="service-name">Trà sữa trân châu</div>
+            <div class="service-price">25.000đ</div>
+            <div class="service-category">Đồ uống</div>
+            <span class="badge badge-green" style="margin-top:8px;"><span class="badge-dot"></span>Đang bán</span>
+          </div>
+          <div class="service-card">
+            <div class="service-emoji">🍔</div>
+            <div class="service-name">Burger gà giòn</div>
+            <div class="service-price">30.000đ</div>
+            <div class="service-category">Đồ ăn</div>
+            <span class="badge badge-green" style="margin-top:8px;"><span class="badge-dot"></span>Đang bán</span>
+          </div>
+          <div class="service-card">
+            <div class="service-emoji">🍟</div>
+            <div class="service-name">Khoai tây chiên</div>
+            <div class="service-price">20.000đ</div>
+            <div class="service-category">Snack</div>
+            <span class="badge badge-green" style="margin-top:8px;"><span class="badge-dot"></span>Đang bán</span>
+          </div>
+        </div>
+      </div>
+      <div class="screen-label">UC16-UC19 — Quản lý & Gọi dịch vụ</div>
+    </div>
+
+    <!-- ======================== -->
+    <!-- PAGE: INVOICES -->
+    <!-- ======================== -->
+    <div id="page-invoices" class="page" style="display:none;flex-direction:column;height:100%;">
+      <div class="header">
+        <div class="header-left">
+          <h2>Hóa đơn</h2>
+          <p>Quản lý và xuất hóa đơn theo lượt chơi</p>
+        </div>
+        <div class="header-actions">
+          <div class="search-box" style="width:250px;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input placeholder="Tìm mã hóa đơn...">
+          </div>
+          <button class="btn btn-ghost">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Xuất PDF
+          </button>
+        </div>
+      </div>
+      <div style="flex:1;display:flex;overflow:hidden;">
+        <div class="content" style="flex:1;">
+          <div class="tab-bar">
+            <button class="tab-btn active">Hôm nay (8)</button>
+            <button class="tab-btn">Tuần này</button>
+            <button class="tab-btn">Tháng này</button>
+          </div>
+          <div style="overflow-x:auto;">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Mã HĐ</th>
+                  <th>Máy</th>
+                  <th>Bắt đầu</th>
+                  <th>Kết thúc</th>
+                  <th>Thời gian</th>
+                  <th>Tiền giờ</th>
+                  <th>Dịch vụ</th>
+                  <th>Giảm giá</th>
+                  <th>Tổng cộng</th>
+                  <th>Trạng thái</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td style="font-family:var(--mono);font-weight:600;">HD-2024001</td>
+                  <td><span class="badge badge-blue">PS 02</span></td>
+                  <td>08:30</td>
+                  <td>11:05</td>
+                  <td style="font-family:var(--mono);">2h 35m</td>
+                  <td style="font-family:var(--mono);">77.500đ</td>
+                  <td style="font-family:var(--mono);">90.000đ</td>
+                  <td style="color:var(--accent-emerald);font-family:var(--mono);">-15.500đ</td>
+                  <td style="font-weight:700;font-family:var(--mono);color:var(--accent-amber);">152.000đ</td>
+                  <td><span class="badge badge-green"><span class="badge-dot"></span>Đã thanh toán</span></td>
+                  <td><button class="btn btn-ghost" style="padding:4px 8px;font-size:11px;">In</button></td>
+                </tr>
+                <tr>
+                  <td style="font-family:var(--mono);font-weight:600;">HD-2024002</td>
+                  <td><span class="badge badge-blue">PS 05</span></td>
+                  <td>09:15</td>
+                  <td>10:45</td>
+                  <td style="font-family:var(--mono);">1h 30m</td>
+                  <td style="font-family:var(--mono);">45.000đ</td>
+                  <td style="font-family:var(--mono);">35.000đ</td>
+                  <td style="font-family:var(--mono);">0đ</td>
+                  <td style="font-weight:700;font-family:var(--mono);color:var(--accent-amber);">80.000đ</td>
+                  <td><span class="badge badge-green"><span class="badge-dot"></span>Đã thanh toán</span></td>
+                  <td><button class="btn btn-ghost" style="padding:4px 8px;font-size:11px;">In</button></td>
+                </tr>
+                <tr>
+                  <td style="font-family:var(--mono);font-weight:600;">HD-2024003</td>
+                  <td><span class="badge badge-blue">PS 03</span></td>
+                  <td>10:00</td>
+                  <td>—</td>
+                  <td style="font-family:var(--mono);color:var(--accent-cyan);">1h 12m ⏱</td>
+                  <td style="font-family:var(--mono);">36.000đ</td>
+                  <td style="font-family:var(--mono);">55.000đ</td>
+                  <td style="color:var(--accent-emerald);font-family:var(--mono);">-7.200đ</td>
+                  <td style="font-weight:700;font-family:var(--mono);color:var(--accent-cyan);">83.800đ~</td>
+                  <td><span class="badge badge-amber"><span class="badge-dot"></span>Đang chơi</span></td>
+                  <td><button class="btn btn-ghost" style="padding:4px 8px;font-size:11px;">Xem</button></td>
+                </tr>
+                <tr>
+                  <td style="font-family:var(--mono);font-weight:600;">HD-2024004</td>
+                  <td><span class="badge badge-blue">PS 08</span></td>
+                  <td>07:00</td>
+                  <td>10:05</td>
+                  <td style="font-family:var(--mono);">3h 05m</td>
+                  <td style="font-family:var(--mono);">92.500đ</td>
+                  <td style="font-family:var(--mono);">0đ</td>
+                  <td style="font-family:var(--mono);">0đ</td>
+                  <td style="font-weight:700;font-family:var(--mono);color:var(--accent-amber);">92.500đ</td>
+                  <td><span class="badge badge-green"><span class="badge-dot"></span>Đã thanh toán</span></td>
+                  <td><button class="btn btn-ghost" style="padding:4px 8px;font-size:11px;">In</button></td>
+                </tr>
+                <tr>
+                  <td style="font-family:var(--mono);font-weight:600;">HD-2024005</td>
+                  <td><span class="badge badge-blue">PS 10</span></td>
+                  <td>13:50</td>
+                  <td>—</td>
+                  <td style="font-family:var(--mono);color:var(--accent-cyan);">0h 20m ⏱</td>
+                  <td style="font-family:var(--mono);">10.000đ</td>
+                  <td style="font-family:var(--mono);">12.000đ</td>
+                  <td style="font-family:var(--mono);">0đ</td>
+                  <td style="font-weight:700;font-family:var(--mono);color:var(--accent-cyan);">22.000đ~</td>
+                  <td><span class="badge badge-amber"><span class="badge-dot"></span>Đang chơi</span></td>
+                  <td><button class="btn btn-ghost" style="padding:4px 8px;font-size:11px;">Xem</button></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div style="margin-top:32px;">
+            <h3 style="font-size:16px;font-weight:700;margin-bottom:16px;">Xem trước hóa đơn</h3>
+            <div class="receipt">
+              <div class="receipt-header">
+                <h3>HomePS Gaming</h3>
+                <p>Hóa đơn thanh toán</p>
+                <p style="margin-top:8px;font-family:var(--mono);font-size:13px;">HD-2024001</p>
+              </div>
+              <div class="receipt-body">
+                <div class="receipt-line"><span style="color:var(--text-muted);">Máy</span><span>PS 02</span></div>
+                <div class="receipt-line"><span style="color:var(--text-muted);">Bắt đầu</span><span>08:30 - 11:05</span></div>
+                <div class="receipt-line"><span style="color:var(--text-muted);">Thời gian</span><span>2h 35m</span></div>
+                <div class="divider" style="margin:10px 0;"></div>
+                <div class="receipt-line"><span>Tiền giờ chơi (2.58h × 30.000đ)</span><span style="font-family:var(--mono);">77.500đ</span></div>
+                <div class="receipt-line"><span>Mì xào bò × 1</span><span style="font-family:var(--mono);">35.000đ</span></div>
+                <div class="receipt-line"><span>Trà đào × 2</span><span style="font-family:var(--mono);">40.000đ</span></div>
+                <div class="receipt-line"><span>Bắp rang bơ × 1</span><span style="font-family:var(--mono);">15.000đ</span></div>
+                <div class="receipt-line discount"><span>🏷 Khung giờ trưa (-20% tiền giờ)</span><span style="font-family:var(--mono);">-15.500đ</span></div>
+                <div class="receipt-line total">
+                  <span>TỔNG CỘNG</span>
+                  <span style="color:var(--accent-amber);font-family:var(--mono);">152.000đ</span>
+                </div>
+              </div>
+              <div class="receipt-footer">
+                <p>Cảm ơn quý khách! Hẹn gặp lại.</p>
+                <p style="margin-top:4px;">11/04/2026 • 11:05 AM</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="screen-label">UC13-UC15 — Hóa đơn & Thanh toán</div>
+    </div>
+
+    <!-- ======================== -->
+    <!-- PAGE: EVENTS -->
+    <!-- ======================== -->
+    <div id="page-events" class="page" style="display:none;flex-direction:column;height:100%;">
+      <div class="header">
+        <div class="header-left">
+          <h2>Sự kiện giảm giá</h2>
+          <p>Tạo và quản lý khuyến mãi thu hút khách hàng</p>
+        </div>
+        <div class="header-actions">
+          <button class="btn btn-primary">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Tạo sự kiện mới
+          </button>
+        </div>
+      </div>
+      <div class="content" style="flex:1;overflow-y:auto;">
+        <div class="filter-pills">
+          <button class="filter-pill active">Tất cả</button>
+          <button class="filter-pill">🟢 Đang áp dụng</button>
+          <button class="filter-pill">🔵 Sắp diễn ra</button>
+          <button class="filter-pill">⚫ Đã hết hạn</button>
+        </div>
+
+        <div class="event-card active">
+          <div class="event-header">
+            <div>
+              <div class="event-title">🌞 Khung giờ trưa - Giảm 20%</div>
+              <div class="event-meta">Áp dụng cho tiền giờ chơi • Giảm theo %</div>
+            </div>
+            <div class="event-discount">-20%</div>
+          </div>
+          <div class="event-period">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            11:00 - 13:00 hàng ngày
+          </div>
+          <div style="margin-top:8px;"><span class="badge badge-green"><span class="badge-dot"></span>Đang áp dụng</span></div>
+        </div>
+
+        <div class="event-card active">
+          <div class="event-header">
+            <div>
+              <div class="event-title">🎮 Happy Hour - Giảm 15%</div>
+              <div class="event-meta">Áp dụng tổng hóa đơn • Giảm theo %</div>
+            </div>
+            <div class="event-discount">-15%</div>
+          </div>
+          <div class="event-period">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            22:00 - 06:00 hàng ngày
+          </div>
+          <div style="margin-top:8px;"><span class="badge badge-green"><span class="badge-dot"></span>Đang áp dụng</span></div>
+        </div>
+
+        <div class="event-card upcoming">
+          <div class="event-header">
+            <div>
+              <div class="event-title">🎆 Nghỉ lễ 30/4 - 1/5</div>
+              <div class="event-meta">Áp dụng tiền giờ chơi • Giảm cố định</div>
+            </div>
+            <div class="event-discount">-10.000đ/h</div>
+          </div>
+          <div class="event-period">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/></svg>
+            30/04/2026 - 01/05/2026 (cả ngày)
+          </div>
+          <div style="margin-top:8px;"><span class="badge badge-blue"><span class="badge-dot"></span>Sắp diễn ra</span></div>
+        </div>
+
+        <div class="event-card expired">
+          <div class="event-header">
+            <div>
+              <div class="event-title">🎄 Giáng sinh 2025</div>
+              <div class="event-meta">Áp dụng tổng hóa đơn • Giảm theo %</div>
+            </div>
+            <div class="event-discount" style="color:var(--text-muted);">-25%</div>
+          </div>
+          <div class="event-period" style="opacity:0.5;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/></svg>
+            24/12/2025 - 26/12/2025
+          </div>
+          <div style="margin-top:8px;"><span class="badge" style="background:rgba(255,255,255,0.05);color:var(--text-muted);"><span class="badge-dot"></span>Đã hết hạn</span></div>
+        </div>
+
+        <!-- Form to create new event -->
+        <div style="margin-top:32px;">
+          <h3 style="font-size:16px;font-weight:700;margin-bottom:16px;">Tạo sự kiện mới</h3>
+          <div style="background:var(--bg-card);border:1px solid var(--border-color);border-radius:var(--radius);padding:24px;max-width:600px;">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+              <div class="form-group">
+                <label class="form-label">Tên sự kiện</label>
+                <input class="form-input" placeholder="VD: Khung giờ trưa">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Loại giảm giá</label>
+                <select class="form-select">
+                  <option>Giảm theo %</option>
+                  <option>Giảm số tiền cố định</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Giá trị giảm</label>
+                <input class="form-input" placeholder="VD: 20">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Áp dụng cho</label>
+                <select class="form-select">
+                  <option>Tiền giờ chơi</option>
+                  <option>Tổng hóa đơn</option>
+                  <option>Tiền dịch vụ</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Bắt đầu</label>
+                <input class="form-input" type="datetime-local">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Kết thúc</label>
+                <input class="form-input" type="datetime-local">
+              </div>
+              <div class="form-group" style="grid-column:span 2;">
+                <label class="form-label">Điều kiện áp dụng</label>
+                <input class="form-input" placeholder="VD: Chơi từ 11:00-13:00">
+              </div>
+            </div>
+            <div style="display:flex;gap:8px;margin-top:16px;">
+              <button class="btn btn-primary">Tạo sự kiện</button>
+              <button class="btn btn-ghost">Hủy</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="screen-label">UC10-UC12 — Sự kiện giảm giá</div>
+    </div>
+
+    <!-- ======================== -->
+    <!-- PAGE: STATISTICS -->
+    <!-- ======================== -->
+    <div id="page-stats" class="page" style="display:none;flex-direction:column;height:100%;">
+      <div class="header">
+        <div class="header-left">
+          <h2>Thống kê doanh thu</h2>
+          <p>Báo cáo doanh thu theo ngày, tuần, tháng</p>
+        </div>
+        <div class="header-actions">
+          <select class="form-select" style="width:auto;">
+            <option>Hôm nay - 11/04/2026</option>
+            <option>Tuần này</option>
+            <option>Tháng 04/2026</option>
+          </select>
+          <button class="btn btn-ghost">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Xuất báo cáo
+          </button>
+        </div>
+      </div>
+      <div class="content" style="flex:1;overflow-y:auto;">
+        <!-- Overview stats -->
+        <div class="stats-row">
+          <div class="stat-card blue">
+            <div class="stat-label">Tổng doanh thu hôm nay</div>
+            <div class="stat-value" style="font-size:24px;">2.450.000đ</div>
+            <div class="stat-change" style="color:var(--accent-emerald);">↑ 12% so với hôm qua</div>
+          </div>
+          <div class="stat-card green">
+            <div class="stat-label">Tổng lượt chơi</div>
+            <div class="stat-value">18</div>
+            <div class="stat-change">15 hoàn thành, 3 đang chơi</div>
+          </div>
+          <div class="stat-card purple" style="--accent: var(--accent-purple);">
+            <div class="stat-label">Doanh thu dịch vụ</div>
+            <div class="stat-value" style="color:var(--accent-purple);font-size:24px;">680.000đ</div>
+            <div class="stat-change">28% tổng doanh thu</div>
+          </div>
+          <div class="stat-card amber">
+            <div class="stat-label">Giảm giá đã áp dụng</div>
+            <div class="stat-value" style="font-size:24px;">125.000đ</div>
+            <div class="stat-change">6 lượt áp dụng</div>
+          </div>
+        </div>
+
+        <!-- Revenue chart -->
+        <div class="chart-container">
+          <div class="chart-header">
+            <div class="chart-title">Doanh thu theo giờ</div>
+            <div class="chart-legend">
+              <div class="legend-item"><div class="legend-dot" style="background:var(--accent-blue);"></div>Tiền giờ chơi</div>
+              <div class="legend-item"><div class="legend-dot" style="background:var(--accent-emerald);"></div>Dịch vụ</div>
+            </div>
+          </div>
+          <div class="chart-bars">
+            <div class="chart-bar-group"><div class="chart-bar blue" style="height:20%"></div><div class="chart-bar green" style="height:10%"></div><div class="chart-bar-label">7h</div></div>
+            <div class="chart-bar-group"><div class="chart-bar blue" style="height:35%"></div><div class="chart-bar green" style="height:15%"></div><div class="chart-bar-label">8h</div></div>
+            <div class="chart-bar-group"><div class="chart-bar blue" style="height:50%"></div><div class="chart-bar green" style="height:25%"></div><div class="chart-bar-label">9h</div></div>
+            <div class="chart-bar-group"><div class="chart-bar blue" style="height:70%"></div><div class="chart-bar green" style="height:40%"></div><div class="chart-bar-label">10h</div></div>
+            <div class="chart-bar-group"><div class="chart-bar blue" style="height:85%"></div><div class="chart-bar green" style="height:50%"></div><div class="chart-bar-label">11h</div></div>
+            <div class="chart-bar-group"><div class="chart-bar blue" style="height:95%"></div><div class="chart-bar green" style="height:60%"></div><div class="chart-bar-label">12h</div></div>
+            <div class="chart-bar-group"><div class="chart-bar blue" style="height:80%"></div><div class="chart-bar green" style="height:45%"></div><div class="chart-bar-label">13h</div></div>
+            <div class="chart-bar-group"><div class="chart-bar blue" style="height:60%"></div><div class="chart-bar green" style="height:30%"></div><div class="chart-bar-label">14h</div></div>
+          </div>
+        </div>
+
+        <!-- Machine-based stats -->
+        <div class="stats-grid-2">
+          <div class="chart-container">
+            <div class="chart-title" style="margin-bottom:16px;">Doanh thu theo máy</div>
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Máy</th>
+                  <th>Lượt chơi</th>
+                  <th>Giờ hoạt động</th>
+                  <th>Doanh thu</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><span class="badge badge-blue">PS 02</span></td>
+                  <td>4</td>
+                  <td style="font-family:var(--mono);">8h 20m</td>
+                  <td style="font-family:var(--mono);font-weight:600;color:var(--accent-amber);">450.000đ</td>
+                </tr>
+                <tr>
+                  <td><span class="badge badge-blue">PS 08</span></td>
+                  <td>3</td>
+                  <td style="font-family:var(--mono);">7h 45m</td>
+                  <td style="font-family:var(--mono);font-weight:600;color:var(--accent-amber);">380.000đ</td>
+                </tr>
+                <tr>
+                  <td><span class="badge badge-blue">PS 05</span></td>
+                  <td>3</td>
+                  <td style="font-family:var(--mono);">6h 30m</td>
+                  <td style="font-family:var(--mono);font-weight:600;color:var(--accent-amber);">350.000đ</td>
+                </tr>
+                <tr>
+                  <td><span class="badge badge-blue">PS 03</span></td>
+                  <td>2</td>
+                  <td style="font-family:var(--mono);">4h 15m</td>
+                  <td style="font-family:var(--mono);font-weight:600;color:var(--accent-amber);">280.000đ</td>
+                </tr>
+                <tr>
+                  <td><span class="badge badge-blue">PS 10</span></td>
+                  <td>2</td>
+                  <td style="font-family:var(--mono);">3h 50m</td>
+                  <td style="font-family:var(--mono);font-weight:600;color:var(--accent-amber);">240.000đ</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="chart-container">
+            <div class="chart-title" style="margin-bottom:16px;">Doanh thu dịch vụ bán chạy</div>
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Dịch vụ</th>
+                  <th>Số lượng</th>
+                  <th>Doanh thu</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>🍜 Mì xào bò</td>
+                  <td>12</td>
+                  <td style="font-family:var(--mono);font-weight:600;color:var(--accent-amber);">420.000đ</td>
+                </tr>
+                <tr>
+                  <td>🥤 Trà đào cam sả</td>
+                  <td>18</td>
+                  <td style="font-family:var(--mono);font-weight:600;color:var(--accent-amber);">360.000đ</td>
+                </tr>
+                <tr>
+                  <td>☕ Cà phê sữa đá</td>
+                  <td>15</td>
+                  <td style="font-family:var(--mono);font-weight:600;color:var(--accent-amber);">270.000đ</td>
+                </tr>
+                <tr>
+                  <td>🍔 Burger gà giòn</td>
+                  <td>8</td>
+                  <td style="font-family:var(--mono);font-weight:600;color:var(--accent-amber);">240.000đ</td>
+                </tr>
+                <tr>
+                  <td>🍿 Bắp rang bơ</td>
+                  <td>10</td>
+                  <td style="font-family:var(--mono);font-weight:600;color:var(--accent-amber);">150.000đ</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Weekly chart -->
+        <div class="chart-container" style="margin-top:20px;">
+          <div class="chart-header">
+            <div class="chart-title">Doanh thu 7 ngày gần nhất</div>
+            <div class="chart-legend">
+              <div class="legend-item"><div class="legend-dot" style="background:var(--accent-blue);"></div>Tiền giờ</div>
+              <div class="legend-item"><div class="legend-dot" style="background:var(--accent-emerald);"></div>Dịch vụ</div>
+              <div class="legend-item"><div class="legend-dot" style="background:var(--accent-purple);"></div>Giảm giá</div>
+            </div>
+          </div>
+          <div class="chart-bars">
+            <div class="chart-bar-group"><div class="chart-bar blue" style="height:65%"></div><div class="chart-bar green" style="height:30%"></div><div class="chart-bar purple" style="height:10%"></div><div class="chart-bar-label">T2</div></div>
+            <div class="chart-bar-group"><div class="chart-bar blue" style="height:55%"></div><div class="chart-bar green" style="height:25%"></div><div class="chart-bar purple" style="height:8%"></div><div class="chart-bar-label">T3</div></div>
+            <div class="chart-bar-group"><div class="chart-bar blue" style="height:70%"></div><div class="chart-bar green" style="height:35%"></div><div class="chart-bar purple" style="height:12%"></div><div class="chart-bar-label">T4</div></div>
+            <div class="chart-bar-group"><div class="chart-bar blue" style="height:80%"></div><div class="chart-bar green" style="height:40%"></div><div class="chart-bar purple" style="height:15%"></div><div class="chart-bar-label">T5</div></div>
+            <div class="chart-bar-group"><div class="chart-bar blue" style="height:90%"></div><div class="chart-bar green" style="height:50%"></div><div class="chart-bar purple" style="height:18%"></div><div class="chart-bar-label">T6</div></div>
+            <div class="chart-bar-group"><div class="chart-bar blue" style="height:100%"></div><div class="chart-bar green" style="height:60%"></div><div class="chart-bar purple" style="height:22%"></div><div class="chart-bar-label">T7</div></div>
+            <div class="chart-bar-group"><div class="chart-bar blue" style="height:75%"></div><div class="chart-bar green" style="height:38%"></div><div class="chart-bar purple" style="height:14%"></div><div class="chart-bar-label">CN</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="screen-label">UC20-UC25 — Thống kê doanh thu</div>
+    </div>
+
+    <!-- ======================== -->
+    <!-- PAGE: HISTORY -->
+    <!-- ======================== -->
+    <div id="page-history" class="page" style="display:none;flex-direction:column;height:100%;">
+      <div class="header">
+        <div class="header-left">
+          <h2>Lịch sử sử dụng máy</h2>
+          <p>Nhật ký lượt chơi theo từng máy</p>
+        </div>
+        <div class="header-actions">
+          <select class="form-select" style="width:auto;">
+            <option>Tất cả máy</option>
+            <option>PS 01</option>
+            <option>PS 02</option>
+            <option>PS 03</option>
+          </select>
+          <input class="form-input" type="date" style="width:auto;">
+        </div>
+      </div>
+      <div class="content" style="flex:1;overflow-y:auto;">
+        <div style="overflow-x:auto;">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Mã lượt chơi</th>
+                <th>Máy</th>
+                <th>CCCD khách</th>
+                <th>Bắt đầu</th>
+                <th>Kết thúc</th>
+                <th>Thời gian</th>
+                <th>Tiền giờ</th>
+                <th>Dịch vụ</th>
+                <th>Tổng</th>
+                <th>Hóa đơn</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td style="font-family:var(--mono);">LC-20260411-001</td>
+                <td><span class="badge badge-blue">PS 02</span></td>
+                <td style="font-family:var(--mono);">079****5678</td>
+                <td>08:30</td>
+                <td>11:05</td>
+                <td style="font-family:var(--mono);">2h 35m</td>
+                <td style="font-family:var(--mono);">77.500đ</td>
+                <td style="font-family:var(--mono);">90.000đ</td>
+                <td style="font-family:var(--mono);font-weight:600;color:var(--accent-amber);">152.000đ</td>
+                <td><a href="#" style="color:var(--accent-blue);">HD-2024001</a></td>
+              </tr>
+              <tr>
+                <td style="font-family:var(--mono);">LC-20260411-002</td>
+                <td><span class="badge badge-blue">PS 05</span></td>
+                <td style="font-family:var(--mono);">086****1234</td>
+                <td>09:15</td>
+                <td>10:45</td>
+                <td style="font-family:var(--mono);">1h 30m</td>
+                <td style="font-family:var(--mono);">45.000đ</td>
+                <td style="font-family:var(--mono);">35.000đ</td>
+                <td style="font-family:var(--mono);font-weight:600;color:var(--accent-amber);">80.000đ</td>
+                <td><a href="#" style="color:var(--accent-blue);">HD-2024002</a></td>
+              </tr>
+              <tr>
+                <td style="font-family:var(--mono);">LC-20260411-003</td>
+                <td><span class="badge badge-blue">PS 08</span></td>
+                <td style="font-family:var(--mono);">052****9876</td>
+                <td>07:00</td>
+                <td>10:05</td>
+                <td style="font-family:var(--mono);">3h 05m</td>
+                <td style="font-family:var(--mono);">92.500đ</td>
+                <td style="font-family:var(--mono);">0đ</td>
+                <td style="font-family:var(--mono);font-weight:600;color:var(--accent-amber);">92.500đ</td>
+                <td><a href="#" style="color:var(--accent-blue);">HD-2024004</a></td>
+              </tr>
+              <tr>
+                <td style="font-family:var(--mono);">LC-20260411-004</td>
+                <td><span class="badge badge-blue">PS 03</span></td>
+                <td style="font-family:var(--mono);">091****4567</td>
+                <td>10:00</td>
+                <td style="color:var(--accent-cyan);">—</td>
+                <td style="font-family:var(--mono);color:var(--accent-cyan);">1h 12m ⏱</td>
+                <td style="font-family:var(--mono);">36.000đ</td>
+                <td style="font-family:var(--mono);">55.000đ</td>
+                <td style="font-family:var(--mono);font-weight:600;color:var(--accent-cyan);">83.800đ~</td>
+                <td><span class="badge badge-amber">Đang chơi</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="screen-label">UC24 — Lịch sử sử dụng máy</div>
+    </div>
+
+    <!-- ======================== -->
+    <!-- PAGE: ADMIN -->
+    <!-- ======================== -->
+    <div id="page-admin" class="page" style="display:none;flex-direction:column;height:100%;">
+      <div class="header">
+        <div class="header-left">
+          <h2>Quản trị hệ thống</h2>
+          <p>Cài đặt, phân quyền và sao lưu dữ liệu</p>
+        </div>
+      </div>
+      <div class="content" style="flex:1;overflow-y:auto;">
+        <div class="tab-bar">
+          <button class="tab-btn active">Cài đặt chung</button>
+          <button class="tab-btn">Phân quyền</button>
+          <button class="tab-btn">Sao lưu</button>
+        </div>
+
+        <!-- Settings -->
+        <div style="max-width:700px;">
+          <div class="chart-container">
+            <h3 style="font-size:15px;font-weight:700;margin-bottom:20px;">Cài đặt giá giờ chơi</h3>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+              <div class="form-group">
+                <label class="form-label">Giá giờ mặc định</label>
+                <input class="form-input" value="30.000" style="font-family:var(--mono);">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Đơn vị</label>
+                <select class="form-select">
+                  <option>VNĐ / giờ</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Quy tắc làm tròn</label>
+                <select class="form-select">
+                  <option>Làm tròn lên 30 phút</option>
+                  <option>Tính theo phút</option>
+                  <option>Làm tròn lên 15 phút</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Thời gian miễn phí đầu (phút)</label>
+                <input class="form-input" value="0" style="font-family:var(--mono);">
+              </div>
+            </div>
+            <button class="btn btn-primary" style="margin-top:8px;">Lưu cài đặt</button>
+          </div>
+
+          <div class="chart-container">
+            <h3 style="font-size:15px;font-weight:700;margin-bottom:20px;">Quản lý tài khoản & Phân quyền</h3>
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Tài khoản</th>
+                  <th>Tên</th>
+                  <th>Vai trò</th>
+                  <th>Trạng thái</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td style="font-family:var(--mono);">admin</td>
+                  <td>Nguyễn Văn A</td>
+                  <td><span class="badge badge-purple">Owner</span></td>
+                  <td><span class="badge badge-green"><span class="badge-dot"></span>Hoạt động</span></td>
+                  <td><button class="btn btn-ghost" style="padding:4px 8px;font-size:11px;">Sửa</button></td>
+                </tr>
+                <tr>
+                  <td style="font-family:var(--mono);">nhanvien01</td>
+                  <td>Trần Thị B</td>
+                  <td><span class="badge badge-blue">Employee</span></td>
+                  <td><span class="badge badge-green"><span class="badge-dot"></span>Hoạt động</span></td>
+                  <td><button class="btn btn-ghost" style="padding:4px 8px;font-size:11px;">Sửa</button></td>
+                </tr>
+                <tr>
+                  <td style="font-family:var(--mono);">nhanvien02</td>
+                  <td>Lê Văn C</td>
+                  <td><span class="badge badge-blue">Employee</span></td>
+                  <td><span class="badge badge-red"><span class="badge-dot"></span>Bị khóa</span></td>
+                  <td><button class="btn btn-ghost" style="padding:4px 8px;font-size:11px;">Sửa</button></td>
+                </tr>
+              </tbody>
+            </table>
+            <button class="btn btn-primary" style="margin-top:12px;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Thêm tài khoản
+            </button>
+          </div>
+
+          <div class="chart-container">
+            <h3 style="font-size:15px;font-weight:700;margin-bottom:20px;">Sao lưu & Khôi phục</h3>
+            <div class="detail-row">
+              <span class="label">Lần sao lưu gần nhất</span>
+              <span class="value" style="font-family:var(--mono);">10/04/2026 23:00</span>
+            </div>
+            <div class="detail-row">
+              <span class="label">Kích thước CSDL</span>
+              <span class="value" style="font-family:var(--mono);">245 MB</span>
+            </div>
+            <div class="detail-row">
+              <span class="label">Tự động sao lưu</span>
+              <span class="badge badge-green"><span class="badge-dot"></span>Bật</span>
+            </div>
+            <div style="display:flex;gap:8px;margin-top:16px;">
+              <button class="btn btn-primary">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                Sao lưu ngay
+              </button>
+              <button class="btn btn-ghost">Khôi phục từ bản sao lưu</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="screen-label">UC27-UC30 — Quản trị hệ thống</div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// Live clock
+function updateClock() {
+  const now = new Date();
+  const clock = document.getElementById('live-clock');
+  if (clock) {
+    clock.textContent = now.toLocaleTimeString('vi-VN', { hour12: false });
+  }
+  requestAnimationFrame(updateClock);
+}
+updateClock();
+
+// Show login first
+document.getElementById('login-screen').style.display = 'flex';
+document.getElementById('main-app').style.display = 'none';
+
+function showApp() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('main-app').style.display = 'flex';
+}
+
+// Navigation
+function switchPage(pageId) {
+  document.querySelectorAll('.page').forEach(p => {
+    p.style.display = 'none';
+    p.classList.remove('active');
+  });
+  const target = document.getElementById('page-' + pageId);
+  if (target) {
+    target.style.display = 'flex';
+    target.classList.add('active');
+  }
+
+  document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+  event.currentTarget.classList.add('active');
+}
+
+// Machine selection
+function selectMachine(id) {
+  document.querySelectorAll('.machine-card').forEach(c => c.classList.remove('selected'));
+  event.currentTarget.classList.add('selected');
+  document.getElementById('right-panel').classList.remove('hidden');
+}
+
+function togglePanel() {
+  document.getElementById('right-panel').classList.toggle('hidden');
+}
+
+// URL hash navigation
+function showPage(pageId) {
+  document.querySelectorAll('.page').forEach(p => {
+    p.style.display = 'none';
+    p.classList.remove('active');
+  });
+  const target = document.getElementById('page-' + pageId);
+  if (target) {
+    target.style.display = 'flex';
+    target.classList.add('active');
+  }
+  document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(item => {
+    if (item.getAttribute('onclick') && item.getAttribute('onclick').includes("'" + pageId + "'")) {
+      item.classList.add('active');
+    }
+  });
+}
+
+function handleHash() {
+  if (window.location.hash) {
+    const page = window.location.hash.replace('#', '');
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('main-app').style.display = 'flex';
+    showPage(page);
+  }
+}
+handleHash();
+window.addEventListener('hashchange', handleHash);
+
+// Tab handling
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', function() {
+    this.parentElement.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    this.classList.add('active');
+  });
+});
+
+// Filter pill handling
+document.querySelectorAll('.filter-pill').forEach(pill => {
+  pill.addEventListener('click', function() {
+    this.parentElement.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
+    this.classList.add('active');
+  });
+});
+</script>
+</body>
+</html>

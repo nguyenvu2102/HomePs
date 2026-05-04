@@ -1,0 +1,41 @@
+# Git files
+.git
+.gitignore
+.gitattributes
+
+# IDE files
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+*.iml
+
+# Build artifacts
+target/
+dist/
+build/
+
+# Node files (if used)
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Maven
+.m2/
+*.jar.asc
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+
+# Documentation
+docs/
+README.md
+CHANGELOG.md
+

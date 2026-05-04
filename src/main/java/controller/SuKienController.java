@@ -1,7 +1,6 @@
 package controller;
 
 import dao.SuKienDAO;
-import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -20,16 +19,8 @@ public class SuKienController extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        String action = request.getParameter("action");
-
-        if ("list".equalsIgnoreCase(action)) {
-            danhSachSuKien(request, response);
-        } else if ("detail".equalsIgnoreCase(action)) {
-            chiTietSuKien(request, response);
-        } else {
-            danhSachSuKien(request, response);
-        }
+            throws IOException {
+        response.sendRedirect(request.getContextPath() + "/index.html");
     }
 
     @Override
@@ -47,26 +38,6 @@ public class SuKienController extends HttpServlet {
         response.sendRedirect(request.getContextPath() + "/sukien?action=list");
     }
 
-    private void danhSachSuKien(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        List<SuKien> danhSach = suKienDAO.getAll();
-        request.setAttribute("danhSachSuKien", danhSach);
-        request.getRequestDispatcher("sukien-list.jsp").forward(request, response);
-    }
-
-    private void chiTietSuKien(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        int id = parseInt(request.getParameter("id"), -1);
-        
-        if (id <= 0) {
-            response.sendRedirect(request.getContextPath() + "/sukien");
-            return;
-        }
-
-        Optional<SuKien> suKienOpt = suKienDAO.findById(id);
-        request.setAttribute("suKien", suKienOpt.orElse(null));
-        request.getRequestDispatcher("sukien-detail.jsp").forward(request, response);
-    }
 
     private void taoSuKien(HttpServletRequest request, HttpServletResponse response) {
         try {

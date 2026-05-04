@@ -12,17 +12,19 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - ./resources/db/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./src/main/resources/db/init.sql:/docker-entrypoint-initdb.d/init.sql
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - homeps_network
 
   backend:
     build:
-      context: ../../
+      context: .
       dockerfile: Dockerfile
     container_name: homeps_app
     ports:
@@ -34,8 +36,6 @@ services:
       DB_URL: jdbc:postgresql://db:5432/homeps
       DB_USER: postgres
       DB_PASSWORD: postgres
-      DB_HOST: db
-      DB_PORT: 5432
     networks:
       - homeps_network
 

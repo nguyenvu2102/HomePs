@@ -5,7 +5,6 @@ import dao.ChiTietHoaDonDAO;
 import dao.DichVuDAO;
 import dao.LuotChoiDAO;
 import dao.SuKienDAO;
-import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -30,14 +29,8 @@ public class HoaDonController extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        String action = request.getParameter("action");
-        
-        if ("view".equalsIgnoreCase(action)) {
-            viewHoaDon(request, response);
-        } else {
-            response.sendRedirect(request.getContextPath() + "/home");
-        }
+            throws IOException {
+        response.sendRedirect(request.getContextPath() + "/index.html");
     }
 
     @Override
@@ -53,25 +46,6 @@ public class HoaDonController extends HttpServlet {
         response.sendRedirect(request.getContextPath() + "/home");
     }
 
-    private void viewHoaDon(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        int luotChoiId = parseInt(request.getParameter("luotChoiId"), -1);
-        if (luotChoiId <= 0) {
-            response.sendRedirect(request.getContextPath() + "/home");
-            return;
-        }
-
-        Optional<HoaDon> hoaDonOpt = hoaDonDAO.findByLuotChoiId(luotChoiId);
-        List<DichVu> danhSachDichVu = dichVuDAO.getAll();
-
-        request.setAttribute("luotChoiId", luotChoiId);
-        request.setAttribute("hoaDon", hoaDonOpt.orElse(null));
-        request.setAttribute("chiTietList", hoaDonOpt.isPresent() ? 
-            chiTietDAO.getByHoaDonId(hoaDonOpt.get().getId()) : List.of());
-        request.setAttribute("danhSachDichVu", danhSachDichVu);
-
-        request.getRequestDispatcher("hoadon.jsp").forward(request, response);
-    }
 
     private void themDichVu(HttpServletRequest request, HttpServletResponse response) {
         try {

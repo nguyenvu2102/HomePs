@@ -1,12 +1,10 @@
 package controller;
 
 import dao.DichVuDAO;
-import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession;
 import model.DichVu;
 
 import java.io.IOException;
@@ -19,30 +17,8 @@ public class DichVuController extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        String editIdParam = request.getParameter("editId");
-        int editId = parseInt(editIdParam, -1);
-
-        if (editId > 0) {
-            Optional<DichVu> editItem = dichVuDAO.findById(editId);
-            if (editItem.isPresent()) {
-                request.setAttribute("editDichVu", editItem.get());
-            }
-        }
-
-        List<DichVu> list = dichVuDAO.getAll();
-        request.setAttribute("danhSachDichVu", list);
-
-        HttpSession session = request.getSession(false);
-        if (session != null) {
-            String flashMessage = (String) session.getAttribute("flashMessage");
-            if (flashMessage != null) {
-                request.setAttribute("flashMessage", flashMessage);
-                session.removeAttribute("flashMessage");
-            }
-        }
-
-        request.getRequestDispatcher("dichvu.jsp").forward(request, response);
+            throws IOException {
+        response.sendRedirect(request.getContextPath() + "/index.html");
     }
 
     @Override

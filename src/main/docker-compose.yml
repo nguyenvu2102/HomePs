@@ -1,0 +1,22 @@
+services:
+  db:
+    image: postgres:15
+    container_name: homeps_db
+    environment:
+      POSTGRES_DB: homeps
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./src/main/resources/db/init.sql:/docker-entrypoint-initdb.d/init.sql
+
+  backend:
+    build: .
+    container_name: homeps_app
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+    environment:
+      DB_URL: jdbc:postgresql://db:5432/homeps

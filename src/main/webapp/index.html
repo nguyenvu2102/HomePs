@@ -942,10 +942,10 @@ body {
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
             Chi tiết
           </button>
-          <button class="btn btn-primary">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            Thêm máy mới
-          </button>
+           <button class="btn btn-primary" onclick="openAddMachineDialog()">
+             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+             Thêm máy mới
+           </button>
         </div>
       </div>
       <div style="flex:1;display:flex;overflow:hidden;">
@@ -991,7 +991,7 @@ body {
           </div>
 
           <!-- Machine grid -->
-          <div class="machine-grid">
+          <div id="machine-grid" class="machine-grid">
             <div class="machine-card vacant" onclick="selectMachine(1)">
               <div class="machine-id">PS 01</div>
               <div class="machine-label">Trống</div>
@@ -1142,22 +1142,7 @@ body {
               </div>
             </div>
           </div>
-          <div class="panel-footer">
-            <button class="btn btn-warning w-full" style="justify-content:center;padding:12px;">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
-              Thanh toán & Kết thúc
-            </button>
-            <div style="display:flex;gap:8px;">
-              <button class="btn btn-ghost flex-1" style="justify-content:center;">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><circle cx="12" cy="12" r="10"/><line x1="10" y1="15" x2="10" y2="9"/><line x1="14" y1="15" x2="14" y2="9"/></svg>
-                Tạm dừng
-              </button>
-              <button class="btn btn-ghost flex-1" style="justify-content:center;">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 014-4h14"/></svg>
-                Chuyển máy
-              </button>
-            </div>
-          </div>
+          <div class="panel-footer" id="machine-action-footer"></div>
         </div>
       </div>
       <div class="screen-label">UC01-UC09 — Quản lý máy PS & Lượt chơi</div>
@@ -1953,11 +1938,105 @@ body {
       <div class="screen-label">UC27-UC30 — Quản trị hệ thống</div>
     </div>
 
-  </div>
-</div>
+   </div>
+ </div>
 
-<script>
-// Live clock
+ <!-- Modal: Add Machine -->
+ <div id="add-machine-modal" class="modal" style="display:none;">
+   <div class="modal-overlay" onclick="closeAddMachineDialog()"></div>
+   <div class="modal-content" style="background:var(--bg-card);border:1px solid var(--border-color);border-radius:var(--radius);padding:24px;min-width:400px;box-shadow:var(--shadow);">
+     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+       <h3 style="font-size:18px;font-weight:700;margin:0;">Thêm máy mới</h3>
+       <button style="background:none;border:none;color:var(--text-secondary);cursor:pointer;font-size:20px;" onclick="closeAddMachineDialog()">✕</button>
+     </div>
+     <form id="add-machine-form" onsubmit="handleAddMachine(event)">
+       <div class="form-group" style="margin-bottom:16px;">
+         <label class="form-label" style="display:block;margin-bottom:6px;font-weight:500;font-size:13px;">Tên máy</label>
+         <input type="text" id="machine-name-input" class="form-input" placeholder="VD: PS 13, PS 14, ..." required style="width:100%;padding:8px 12px;border:1px solid var(--border-color);border-radius:var(--radius-sm);background:var(--bg-secondary);color:var(--text-primary);font-size:13px;">
+       </div>
+       <div class="form-group" style="margin-bottom:20px;">
+         <label class="form-label" style="display:block;margin-bottom:6px;font-weight:500;font-size:13px;">Ghi chú (tùy chọn)</label>
+         <textarea id="machine-note-input" class="form-input" placeholder="Ghi chú thêm về máy..." style="width:100%;padding:8px 12px;border:1px solid var(--border-color);border-radius:var(--radius-sm);background:var(--bg-secondary);color:var(--text-primary);font-size:13px;resize:vertical;min-height:60px;"></textarea>
+       </div>
+       <div style="display:flex;gap:8px;justify-content:flex-end;">
+         <button type="button" class="btn btn-ghost" onclick="closeAddMachineDialog()">Hủy</button>
+         <button type="submit" class="btn btn-primary">Thêm máy</button>
+       </div>
+     </form>
+   </div>
+ </div>
+
+ <!-- Modal: Payment/Receipt -->
+ <div id="payment-modal" class="modal" style="display:none;">
+   <div class="modal-overlay"></div>
+   <div class="modal-content" style="background:var(--bg-card);border:1px solid var(--border-color);border-radius:var(--radius);padding:24px;min-width:450px;box-shadow:var(--shadow);">
+     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+       <h3 style="font-size:18px;font-weight:700;margin:0;">📋 Hoá đơn thanh toán</h3>
+       <button style="background:none;border:none;color:var(--text-secondary);cursor:pointer;font-size:20px;" onclick="closePaymentModal()">✕</button>
+     </div>
+     <div id="payment-content" style="border:1px solid var(--border-color);border-radius:var(--radius-sm);padding:16px;background:var(--bg-secondary);margin-bottom:20px;">
+       <!-- Dynamic content will be inserted here -->
+     </div>
+     <div style="display:flex;gap:8px;justify-content:flex-end;">
+       <button type="button" class="btn btn-ghost" onclick="closePaymentModal()">Hủy</button>
+       <button type="button" class="btn btn-primary" onclick="confirmPayment()">Xác nhận thanh toán</button>
+     </div>
+   </div>
+ </div>
+
+ <style>
+   .modal {
+     position: fixed;
+     top: 0;
+     left: 0;
+     right: 0;
+     bottom: 0;
+     display: flex;
+     align-items: center;
+     justify-content: center;
+     z-index: 1000;
+   }
+   .modal-overlay {
+     position: absolute;
+     top: 0;
+     left: 0;
+     right: 0;
+     bottom: 0;
+     background: rgba(0, 0, 0, 0.5);
+   }
+   .modal-content {
+     position: relative;
+     z-index: 1001;
+   }
+   .form-input {
+     font-family: inherit;
+     outline: none;
+     transition: all 0.2s;
+   }
+   .form-input:focus {
+     border-color: var(--accent-blue) !important;
+     box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+   }
+ </style>
+
+ <script>
+const APP_BASE = (() => {
+  const path = window.location.pathname.replace(/\\/g, '/');
+  if (path === '/' || path === '') return '';
+  const indexPos = path.lastIndexOf('/index.html');
+  if (indexPos >= 0) return path.slice(0, indexPos);
+  const lastSlash = path.lastIndexOf('/');
+  if (lastSlash > 0) return path.slice(0, lastSlash);
+  return path;
+})();
+const API_BASE = `${APP_BASE}/api`;
+
+const machineState = {
+   machines: [],
+   selectedId: null,
+   timeIntervals: {}
+ };
+
 function updateClock() {
   const now = new Date();
   const clock = document.getElementById('live-clock');
@@ -1968,17 +2047,16 @@ function updateClock() {
 }
 updateClock();
 
-// Show login first
 document.getElementById('login-screen').style.display = 'flex';
 document.getElementById('main-app').style.display = 'none';
 
 function showApp() {
   document.getElementById('login-screen').style.display = 'none';
   document.getElementById('main-app').style.display = 'flex';
+  loadMachinesFromBackend();
 }
 
-// Navigation
-function switchPage(pageId) {
+function switchPage(pageId, navElement) {
   document.querySelectorAll('.page').forEach(p => {
     p.style.display = 'none';
     p.classList.remove('active');
@@ -1990,21 +2068,447 @@ function switchPage(pageId) {
   }
 
   document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
-  event.currentTarget.classList.add('active');
+  const activeItem = navElement || (window.event && window.event.currentTarget);
+  if (activeItem) {
+    activeItem.classList.add('active');
+  }
 }
 
-// Machine selection
-function selectMachine(id) {
+function normalizeMachine(machine) {
+  const rawStatus = String(machine.tinhTrang ?? machine.tinhtrang ?? '').trim().toUpperCase();
+  const note = String(machine.ghiChu ?? machine.ghichu ?? '').trim();
+  const id = Number(machine.id);
+  const displayName = machine.tenMay || machine.tenmay || `PS ${String(id).padStart(2, '0')}`;
+
+  if (['DANG_SU_DUNG', 'DANG_CHOI', 'IN_USE', 'BUSY'].includes(rawStatus)) {
+    return { id, displayName, stateClass: 'in-use', label: 'Đang chơi', note };
+  }
+
+  if (['BAO_TRI', 'MAINTENANCE'].includes(rawStatus)) {
+    return { id, displayName, stateClass: 'maintenance', label: 'Bảo trì', note };
+  }
+
+  if (['HONG', 'BROKEN', 'ERROR'].includes(rawStatus)) {
+    return { id, displayName, stateClass: 'maintenance', label: 'Hỏng', note };
+  }
+
+  if (['PAUSED', 'TAM_DUNG'].includes(rawStatus)) {
+    return { id, displayName, stateClass: 'paused', label: 'Tạm dừng', note };
+  }
+
+  return { id, displayName, stateClass: 'vacant', label: 'Trống', note };
+}
+
+function renderMachineCards(machines) {
+  const grid = document.getElementById('machine-grid');
+  if (!grid) return;
+
+  const normalized = machines.map(normalizeMachine);
+  const total = normalized.length;
+  const inUse = normalized.filter(m => m.stateClass === 'in-use').length;
+  const maintenance = normalized.filter(m => m.stateClass === 'maintenance' || m.label === 'Hỏng').length;
+  const vacant = Math.max(total - inUse - maintenance, 0);
+
+  updateMachineStats(total, inUse, vacant, maintenance, normalized);
+
+  if (normalized.length === 0) {
+    grid.innerHTML = '<div class="stat-card" style="grid-column:1/-1;text-align:center;padding:24px;">Không có máy nào từ backend.</div>';
+    renderMachineDetails(null);
+    return;
+  }
+
+  grid.innerHTML = normalized.map(machine => `
+    <div class="machine-card ${machine.stateClass} ${machine.id === machineState.selectedId ? 'selected' : ''}" data-machine-id="${machine.id}" onclick="selectMachine(${machine.id}, this)">
+      <div class="machine-id">${escapeHtml(machine.displayName)}</div>
+      <div class="machine-label">${escapeHtml(machine.label)}</div>
+      ${machine.note ? `<div class="machine-customer" style="font-size:12px;opacity:.85;text-align:center;padding:0 10px;">${escapeHtml(machine.note)}</div>` : ''}
+    </div>
+  `).join('');
+
+  const selected = normalized.find(m => m.id === machineState.selectedId) || normalized[0];
+  machineState.selectedId = selected.id;
+  renderMachineDetails(selected);
+}
+
+function updateMachineStats(total, inUse, vacant, maintenance, normalized) {
+  const statCards = document.querySelectorAll('#page-machines .stat-card');
+  if (statCards.length >= 4) {
+    const values = [total, inUse, vacant, maintenance];
+    statCards.forEach((card, index) => {
+      const statValue = card.querySelector('.stat-value');
+      if (statValue) statValue.textContent = values[index];
+    });
+
+    const changes = [
+      normalized.length ? 'Đồng bộ từ backend' : 'Chưa có dữ liệu',
+      inUse ? 'Máy đang hoạt động' : 'Không có máy đang chơi',
+      vacant ? 'Sẵn sàng phục vụ' : 'Không còn máy trống',
+      maintenance ? `PS cần kiểm tra: ${normalized.filter(m => m.stateClass === 'maintenance' || m.label === 'Hỏng').map(m => m.displayName).join(', ')}` : 'Không có máy hỏng'
+    ];
+    statCards.forEach((card, index) => {
+      const statChange = card.querySelector('.stat-change');
+      if (statChange) statChange.textContent = changes[index];
+    });
+  }
+
+  const pills = document.querySelectorAll('#page-machines .filter-pill');
+  if (pills.length >= 4) {
+    pills[0].textContent = `Tất cả (${total})`;
+    pills[1].textContent = `🟢 Đang chơi (${inUse})`;
+    pills[2].textContent = `⚪ Trống (${vacant})`;
+    pills[3].textContent = `🔴 Bảo trì (${maintenance})`;
+  }
+}
+
+ function renderMachineDetails(machine) {
+   const header = document.querySelector('#right-panel .panel-header h3');
+   const panelBody = document.querySelector('#right-panel .panel-body');
+   const panelFooter = document.getElementById('machine-action-footer');
+   if (!panelBody) return;
+
+   // Clear any existing timers for this machine
+   if (machineState.timeIntervals[machine?.id]) {
+     clearInterval(machineState.timeIntervals[machine.id]);
+     delete machineState.timeIntervals[machine.id];
+   }
+
+   if (!machine) {
+     if (header) header.textContent = 'Chi tiết máy';
+     panelBody.innerHTML = `
+       <div class="detail-section">
+         <div style="text-align:center;margin-bottom:16px;">
+           <div style="font-size:40px;font-weight:800;color:var(--accent-blue);">HomePS</div>
+           <span class="badge badge-blue"><span class="badge-dot"></span>Chọn một máy</span>
+         </div>
+       </div>
+       <div class="detail-section">
+         <h4>Dữ liệu backend</h4>
+         <div class="detail-row">
+           <span class="label">Trạng thái</span>
+           <span class="value">Đang đợi dữ liệu</span>
+         </div>
+         <div class="detail-row">
+           <span class="label">Ghi chú</span>
+           <span class="value">Backend chưa trả về máy nào</span>
+         </div>
+       </div>
+     `;
+     if (panelFooter) {
+       panelFooter.innerHTML = '<div style="color:var(--text-muted);font-size:12px;">Chọn một máy để thao tác mở / đóng.</div>';
+     }
+     return;
+   }
+
+   if (header) header.textContent = `Chi tiết ${machine.displayName}`;
+   const badgeClass = machine.stateClass === 'in-use' ? 'badge-green' : machine.stateClass === 'maintenance' ? 'badge-red' : machine.stateClass === 'paused' ? 'badge-amber' : 'badge-blue';
+
+   // Find full machine data from machineState.machines
+   const fullMachine = machineState.machines.find(m => Number(m.id) === Number(machine.id)) || {};
+
+   let sessionHtml = '';
+   if (machine.stateClass === 'in-use' && fullMachine.luotchoiId) {
+     // Machine is in use, show session info
+     const startTime = new Date(fullMachine.thoiGianBatDau);
+     const minutesElapsed = Math.max(0, Math.floor((Date.now() - startTime.getTime()) / 60000));
+     const estimatedCost = fullMachine.estimatedCost || 0;
+
+     sessionHtml = `
+       <div class="detail-section">
+         <h4>Thông tin lượt chơi</h4>
+         <div class="detail-row">
+           <span class="label">Mã lượt chơi</span>
+           <span class="value" style="font-family:var(--mono);">LC-${fullMachine.luotchoiId}</span>
+         </div>
+         <div class="detail-row">
+           <span class="label">Bắt đầu lúc</span>
+           <span class="value">${startTime.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</span>
+         </div>
+         <div class="detail-row">
+           <span class="label">Thời gian chơi</span>
+           <span class="value" style="color:var(--accent-cyan);font-family:var(--mono);font-weight:600;" id="elapsed-time-${machine.id}">
+             ${formatDuration(minutesElapsed)}
+           </span>
+         </div>
+         <div class="detail-row">
+           <span class="label">Đơn giá</span>
+           <span class="value" style="font-family:var(--mono);">${(fullMachine.donGiaGio || 30000).toLocaleString('vi-VN')}đ/h</span>
+         </div>
+         <div class="detail-row" style="font-size:15px;font-weight:700;padding:8px 0;border-top:1px solid var(--border-color);margin-top:8px;color:var(--accent-amber);">
+           <span class="label">Ước tính tiền</span>
+           <span class="value" id="estimated-cost-${machine.id}" style="font-family:var(--mono);">
+             ${estimatedCost.toLocaleString('vi-VN', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}đ
+           </span>
+         </div>
+       </div>
+       <div class="divider"></div>
+     `;
+
+     // Start update interval for this machine
+     machineState.timeIntervals[machine.id] = setInterval(() => {
+       const elapsed = Math.max(0, Math.floor((Date.now() - startTime.getTime()) / 60000));
+       const cost = fullMachine.donGiaGio * (elapsed / 60.0);
+
+       const timeEl = document.getElementById(`elapsed-time-${machine.id}`);
+       const costEl = document.getElementById(`estimated-cost-${machine.id}`);
+
+       if (timeEl) timeEl.textContent = formatDuration(elapsed);
+       if (costEl) costEl.textContent = cost.toLocaleString('vi-VN', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) + 'đ';
+     }, 1000);
+   }
+
+   panelBody.innerHTML = `
+     <div class="detail-section">
+       <div style="text-align:center;margin-bottom:16px;">
+         <div style="font-size:40px;font-weight:800;color:var(--accent-blue);">${escapeHtml(machine.displayName)}</div>
+         <span class="badge ${badgeClass}"><span class="badge-dot"></span>${escapeHtml(machine.label)}</span>
+       </div>
+     </div>
+     <div class="detail-section">
+       <h4>Thông tin máy</h4>
+       <div class="detail-row">
+         <span class="label">Mã máy</span>
+         <span class="value" style="font-family:var(--mono);">${machine.id}</span>
+       </div>
+       <div class="detail-row">
+         <span class="label">Trạng thái</span>
+         <span class="value">${escapeHtml(machine.label)}</span>
+       </div>
+       <div class="detail-row">
+         <span class="label">Ghi chú</span>
+         <span class="value">${escapeHtml(machine.note || 'Không có')}</span>
+       </div>
+     </div>
+     ${sessionHtml}
+   `;
+
+   if (panelFooter) {
+     panelFooter.innerHTML = renderMachineFooter(machine);
+   }
+ }
+
+ function formatDuration(minutes) {
+   const hours = Math.floor(minutes / 60);
+   const mins = minutes % 60;
+   return `${hours}h ${mins}m`;
+ }
+
+function renderMachineFooter(machine) {
+  if (machine.stateClass === 'in-use') {
+    return `
+      <button class="btn btn-warning w-full" style="justify-content:center;padding:12px;" onclick="performMachineAction('close', ${machine.id})">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+        Đóng máy
+      </button>
+      <div style="display:flex;gap:8px;margin-top:8px;">
+        <button class="btn btn-ghost flex-1" style="justify-content:center;" onclick="performMachineAction('close', ${machine.id})">Thanh toán & Kết thúc</button>
+        <button class="btn btn-ghost flex-1" style="justify-content:center;" disabled>Tạm dừng</button>
+      </div>
+    `;
+  }
+
+  return `
+    <button class="btn btn-success w-full" style="justify-content:center;padding:12px;" onclick="performMachineAction('open', ${machine.id})">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+      Mở máy
+    </button>
+    <div style="display:flex;gap:8px;margin-top:8px;">
+      <button class="btn btn-ghost flex-1" style="justify-content:center;" disabled>Tạm dừng</button>
+      <button class="btn btn-ghost flex-1" style="justify-content:center;" disabled>Chuyển máy</button>
+    </div>
+  `;
+}
+
+ async function performMachineAction(action, machineId) {
+   const footer = document.getElementById('machine-action-footer');
+   const selectedMachine = machineState.machines.find(item => Number(item.id) === Number(machineId));
+   if (!selectedMachine) return;
+
+   const confirmMessage = action === 'open'
+     ? `Mở máy ${selectedMachine.tenmay || selectedMachine.tenMay || machineId}?`
+     : `Đóng máy ${selectedMachine.tenmay || selectedMachine.tenMay || machineId}?`;
+
+   if (!window.confirm(confirmMessage)) {
+     return;
+   }
+
+   try {
+     if (footer) footer.style.pointerEvents = 'none';
+
+     const form = new URLSearchParams();
+     form.set('action', action);
+     form.set('id', machineId);
+     form.set('nhanVienId', '1');
+
+     const response = await fetch(`${API_BASE}/machines`, {
+       method: 'POST',
+       headers: {
+         'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
+         'Accept': 'application/json'
+       },
+       body: form.toString(),
+       credentials: 'same-origin'
+     });
+
+     const payload = await response.json().catch(() => ({}));
+     if (!response.ok || payload.success === false) {
+       throw new Error(payload.message || `HTTP ${response.status}`);
+     }
+
+     machineState.selectedId = Number(machineId);
+
+     if (action === 'close') {
+       // Show payment modal
+       showPaymentModal(selectedMachine, payload.totalHoursMoney);
+     } else {
+       // Open machine - just show success
+       alert(payload.message || 'Đã mở máy');
+       await loadMachinesFromBackend();
+     }
+   } catch (error) {
+     console.error('Machine action failed', error);
+     alert(error.message || 'Thao tác máy thất bại');
+   } finally {
+     if (footer) footer.style.pointerEvents = '';
+   }
+ }
+
+ function showPaymentModal(machine, totalCost) {
+   const modal = document.getElementById('payment-modal');
+   const content = document.getElementById('payment-content');
+
+   const machineDisplayName = machine.tenmay || machine.tenMay || `PS ${machine.id}`;
+
+   content.innerHTML = `
+     <div style="display:flex;justify-content:space-between;margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--border-light);">
+       <span class="label" style="font-weight:600;">Máy</span>
+       <span class="value" style="font-weight:600;">${escapeHtml(machineDisplayName)}</span>
+     </div>
+     <div style="display:flex;justify-content:space-between;margin-bottom:12px;">
+       <span class="label">Thời gian chơi</span>
+       <span class="value" style="font-family:var(--mono);" id="payment-time"></span>
+     </div>
+     <div style="display:flex;justify-content:space-between;margin-bottom:12px;">
+       <span class="label">Đơn giá</span>
+       <span class="value" style="font-family:var(--mono);">30.000đ/h</span>
+     </div>
+     <div style="display:flex;justify-content:space-between;margin-bottom:12px;padding:12px;background:rgba(59,130,246,0.15);border-radius:var(--radius-sm);">
+       <span class="label" style="font-weight:600;">Tổng tiền chơi</span>
+       <span class="value" style="font-weight:700;color:var(--accent-blue);font-family:var(--mono);" id="payment-total">
+         ${(totalCost || 0).toLocaleString('vi-VN', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}đ
+       </span>
+     </div>
+     <div style="display:flex;justify-content:space-between;margin-bottom:12px;">
+       <span class="label">Dịch vụ khác</span>
+       <span class="value" style="font-family:var(--mono);">0đ</span>
+     </div>
+     <div style="display:flex;justify-content:space-between;margin-bottom:12px;">
+       <span class="label">Khuyến mãi</span>
+       <span class="value" style="color:var(--accent-emerald);font-family:var(--mono);">-0đ</span>
+     </div>
+     <div style="display:flex;justify-content:space-between;padding:12px;background:rgba(139,92,246,0.15);border-radius:var(--radius-sm);border:1px solid var(--border-light);">
+       <span class="label" style="font-weight:700;font-size:15px;">Tổng cộng</span>
+       <span class="value" style="font-weight:800;color:var(--accent-purple);font-family:var(--mono);font-size:15px;" id="payment-final">
+         ${(totalCost || 0).toLocaleString('vi-VN', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}đ
+       </span>
+     </div>
+   `;
+
+   if (modal) {
+     modal.style.display = 'flex';
+   }
+
+   // Store for confirmation
+   window.pendingPayment = {
+     machineId: machine.id,
+     totalCost: totalCost,
+     machineName: machineDisplayName
+   };
+ }
+
+ function closePaymentModal() {
+   const modal = document.getElementById('payment-modal');
+   if (modal) {
+     modal.style.display = 'none';
+   }
+   window.pendingPayment = null;
+ }
+
+ async function confirmPayment() {
+   if (!window.pendingPayment) return;
+
+   try {
+     alert(`💰 Thanh toán thành công: ${window.pendingPayment.totalCost.toLocaleString('vi-VN', { minimumFractionDigits: 0 })}đ\n\nMáy ${window.pendingPayment.machineName} đã sẵn sàng phục vụ khách hàng tiếp theo.`);
+     closePaymentModal();
+     await loadMachinesFromBackend();
+   } catch (error) {
+     console.error('Payment confirmation failed', error);
+     alert('Xác nhận thanh toán thất bại');
+   }
+ }
+
+function escapeHtml(value) {
+  return String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function selectMachine(id, cardElement) {
+  machineState.selectedId = Number(id);
   document.querySelectorAll('.machine-card').forEach(c => c.classList.remove('selected'));
-  event.currentTarget.classList.add('selected');
-  document.getElementById('right-panel').classList.remove('hidden');
+
+  const target = cardElement || (window.event && window.event.currentTarget) || document.querySelector(`.machine-card[data-machine-id="${id}"]`);
+  if (target) {
+    target.classList.add('selected');
+  }
+
+  const machine = machineState.machines.find(item => Number(item.id) === Number(id));
+  if (machine) {
+    renderMachineDetails(normalizeMachine(machine));
+  }
 }
 
 function togglePanel() {
   document.getElementById('right-panel').classList.toggle('hidden');
 }
 
-// URL hash navigation
+async function loadMachinesFromBackend() {
+  const headerDescription = document.querySelector('#page-machines .header-left p');
+  try {
+    if (headerDescription) {
+      headerDescription.textContent = 'Đang đồng bộ dữ liệu máy từ backend...';
+    }
+
+    const response = await fetch(`${API_BASE}/machines`, {
+      headers: { 'Accept': 'application/json' },
+      credentials: 'same-origin'
+    });
+
+    if (!response.ok) {
+      throw new Error(`Backend trả về HTTP ${response.status}`);
+    }
+
+    const data = await response.json();
+    machineState.machines = Array.isArray(data) ? data : [];
+    const stillExists = machineState.machines.some(item => Number(item.id) === Number(machineState.selectedId));
+    if (!stillExists) {
+      machineState.selectedId = machineState.machines.length > 0 ? Number(machineState.machines[0].id) : null;
+    }
+    renderMachineCards(machineState.machines);
+
+    if (headerDescription) {
+      headerDescription.textContent = `Đã tải ${machineState.machines.length} máy từ backend`;
+    }
+  } catch (error) {
+    console.warn('Không tải được máy từ backend, giữ giao diện demo hiện tại.', error);
+    if (headerDescription) {
+      headerDescription.textContent = 'Không kết nối được backend, đang dùng dữ liệu mẫu';
+    }
+  }
+}
+
 function showPage(pageId) {
   document.querySelectorAll('.page').forEach(p => {
     p.style.display = 'none';
@@ -2029,12 +2533,12 @@ function handleHash() {
     document.getElementById('login-screen').style.display = 'none';
     document.getElementById('main-app').style.display = 'flex';
     showPage(page);
+    loadMachinesFromBackend();
   }
 }
 handleHash();
 window.addEventListener('hashchange', handleHash);
 
-// Tab handling
 document.querySelectorAll('.tab-btn').forEach(btn => {
   btn.addEventListener('click', function() {
     this.parentElement.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -2042,13 +2546,68 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
   });
 });
 
-// Filter pill handling
 document.querySelectorAll('.filter-pill').forEach(pill => {
-  pill.addEventListener('click', function() {
-    this.parentElement.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
-    this.classList.add('active');
-  });
-});
+   pill.addEventListener('click', function() {
+     this.parentElement.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
+     this.classList.add('active');
+   });
+ });
+
+ function openAddMachineDialog() {
+   const modal = document.getElementById('add-machine-modal');
+   if (modal) {
+     modal.style.display = 'flex';
+     document.getElementById('machine-name-input').focus();
+   }
+ }
+
+ function closeAddMachineDialog() {
+   const modal = document.getElementById('add-machine-modal');
+   if (modal) {
+     modal.style.display = 'none';
+   }
+   document.getElementById('add-machine-form').reset();
+ }
+
+ async function handleAddMachine(event) {
+   event.preventDefault();
+   const tenMay = document.getElementById('machine-name-input').value.trim();
+   const ghiChu = document.getElementById('machine-note-input').value.trim();
+
+   if (!tenMay) {
+     alert('Tên máy không được để trống');
+     return;
+   }
+
+   try {
+     const form = new URLSearchParams();
+     form.set('action', 'create');
+     form.set('tenMay', tenMay);
+     form.set('ghiChu', ghiChu);
+
+     const response = await fetch(`${API_BASE}/machines`, {
+       method: 'POST',
+       headers: {
+         'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
+         'Accept': 'application/json'
+       },
+       body: form.toString(),
+       credentials: 'same-origin'
+     });
+
+     const payload = await response.json().catch(() => ({}));
+     if (!response.ok || payload.success === false) {
+       throw new Error(payload.message || `HTTP ${response.status}`);
+     }
+
+     alert('✅ Thêm máy thành công');
+     closeAddMachineDialog();
+     await loadMachinesFromBackend();
+   } catch (error) {
+     console.error('Add machine failed', error);
+     alert('❌ Thêm máy thất bại: ' + (error.message || 'Lỗi không xác định'));
+   }
+ }
 </script>
 </body>
 </html>

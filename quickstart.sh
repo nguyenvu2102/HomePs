@@ -1,6 +1,3 @@
-#!/bin/bash
-# HomePS Docker Quick Start Script for Linux/MacOS
-
 set -e
 
 echo ""

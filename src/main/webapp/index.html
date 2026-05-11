@@ -851,13 +851,14 @@ body {
     <div class="login-subtitle">Hệ thống quản lý cửa hàng game PS</div>
     <div class="form-group">
       <label class="form-label">Tài khoản</label>
-      <input class="form-input" type="text" placeholder="Nhập tên đăng nhập" value="admin">
+      <input id="login-username" class="form-input" type="text" placeholder="Nhập tên đăng nhập" value="admin">
     </div>
     <div class="form-group">
       <label class="form-label">Mật khẩu</label>
-      <input class="form-input" type="password" placeholder="••••••••" value="password">
+      <input id="login-password" class="form-input" type="password" placeholder="••••••••" value="admin">
     </div>
-    <button class="btn btn-primary" onclick="showApp()" style="width:100%;justify-content:center;padding:12px;margin-top:8px;">
+    <div id="login-error" style="display:none;margin-top:8px;font-size:12px;color:#ef4444;"></div>
+    <button id="login-button" class="btn btn-primary" onclick="login()" style="width:100%;justify-content:center;padding:12px;margin-top:8px;">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
       Đăng nhập
     </button>
@@ -2056,6 +2057,83 @@ function showApp() {
   loadMachinesFromBackend();
 }
 
+function showLogin(message = '') {
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('main-app').style.display = 'none';
+  const errorEl = document.getElementById('login-error');
+  if (errorEl) {
+    errorEl.textContent = message;
+    errorEl.style.display = message ? 'block' : 'none';
+  }
+}
+
+async function login() {
+  const usernameEl = document.getElementById('login-username');
+  const passwordEl = document.getElementById('login-password');
+  const buttonEl = document.getElementById('login-button');
+  const errorEl = document.getElementById('login-error');
+
+  const username = usernameEl ? usernameEl.value.trim() : '';
+  const password = passwordEl ? passwordEl.value : '';
+
+  if (errorEl) {
+    errorEl.textContent = '';
+    errorEl.style.display = 'none';
+  }
+
+  if (!username || !password) {
+    if (errorEl) {
+      errorEl.textContent = 'Vui lòng nhập tài khoản và mật khẩu';
+      errorEl.style.display = 'block';
+    }
+    return;
+  }
+
+  if (buttonEl) buttonEl.disabled = true;
+
+  try {
+    const form = new URLSearchParams();
+    form.set('username', username);
+    form.set('password', password);
+
+    const response = await fetch(`${APP_BASE}/login`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
+        'Accept': 'application/json'
+      },
+      credentials: 'same-origin',
+      body: form.toString()
+    });
+
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok || payload.success === false) {
+      throw new Error(payload.message || `HTTP ${response.status}`);
+    }
+
+    showApp();
+  } catch (error) {
+    if (errorEl) {
+      errorEl.textContent = error.message || 'Đăng nhập thất bại';
+      errorEl.style.display = 'block';
+    }
+  } finally {
+    if (buttonEl) buttonEl.disabled = false;
+  }
+}
+
+['login-username', 'login-password'].forEach(id => {
+  const element = document.getElementById(id);
+  if (element) {
+    element.addEventListener('keydown', event => {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        login();
+      }
+    });
+  }
+});
+
 function switchPage(pageId, navElement) {
   document.querySelectorAll('.page').forEach(p => {
     p.style.display = 'none';
@@ -2350,6 +2428,10 @@ function renderMachineFooter(machine) {
      });
 
      const payload = await response.json().catch(() => ({}));
+     if (response.status === 401) {
+       showLogin('Phiên đăng nhập đã hết hạn');
+       return;
+     }
      if (!response.ok || payload.success === false) {
        throw new Error(payload.message || `HTTP ${response.status}`);
      }
@@ -2357,8 +2439,7 @@ function renderMachineFooter(machine) {
      machineState.selectedId = Number(machineId);
 
      if (action === 'close') {
-       // Show payment modal
-       showPaymentModal(selectedMachine, payload.totalHoursMoney);
+       showPaymentModal(selectedMachine, payload);
      } else {
        // Open machine - just show success
        alert(payload.message || 'Đã mở máy');
@@ -2372,11 +2453,14 @@ function renderMachineFooter(machine) {
    }
  }
 
- function showPaymentModal(machine, totalCost) {
+ function showPaymentModal(machine, paymentData) {
    const modal = document.getElementById('payment-modal');
    const content = document.getElementById('payment-content');
 
    const machineDisplayName = machine.tenmay || machine.tenMay || `PS ${machine.id}`;
+   const totalCost = Number(paymentData?.totalHoursMoney || 0);
+   const minutesPlayed = Number(paymentData?.minutesPlayed || 0);
+   const donGiaGio = Number(paymentData?.donGiaGio || 30000);
 
    content.innerHTML = `
      <div style="display:flex;justify-content:space-between;margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--border-light);">
@@ -2385,11 +2469,11 @@ function renderMachineFooter(machine) {
      </div>
      <div style="display:flex;justify-content:space-between;margin-bottom:12px;">
        <span class="label">Thời gian chơi</span>
-       <span class="value" style="font-family:var(--mono);" id="payment-time"></span>
+       <span class="value" style="font-family:var(--mono);" id="payment-time">${formatDuration(minutesPlayed)}</span>
      </div>
      <div style="display:flex;justify-content:space-between;margin-bottom:12px;">
        <span class="label">Đơn giá</span>
-       <span class="value" style="font-family:var(--mono);">30.000đ/h</span>
+       <span class="value" style="font-family:var(--mono);">${donGiaGio.toLocaleString('vi-VN', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}đ/h</span>
      </div>
      <div style="display:flex;justify-content:space-between;margin-bottom:12px;padding:12px;background:rgba(59,130,246,0.15);border-radius:var(--radius-sm);">
        <span class="label" style="font-weight:600;">Tổng tiền chơi</span>
@@ -2420,6 +2504,9 @@ function renderMachineFooter(machine) {
    // Store for confirmation
    window.pendingPayment = {
      machineId: machine.id,
+     luotchoiId: Number(paymentData?.luotchoiId || 0),
+     minutesPlayed,
+     donGiaGio,
      totalCost: totalCost,
      machineName: machineDisplayName
    };
@@ -2437,12 +2524,35 @@ function renderMachineFooter(machine) {
    if (!window.pendingPayment) return;
 
    try {
-     alert(`💰 Thanh toán thành công: ${window.pendingPayment.totalCost.toLocaleString('vi-VN', { minimumFractionDigits: 0 })}đ\n\nMáy ${window.pendingPayment.machineName} đã sẵn sàng phục vụ khách hàng tiếp theo.`);
+     const form = new URLSearchParams();
+     form.set('action', 'checkout');
+     form.set('luotChoiId', String(window.pendingPayment.luotchoiId));
+
+     const response = await fetch(`${APP_BASE}/hoadon`, {
+       method: 'POST',
+       headers: {
+         'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
+         'Accept': 'application/json'
+       },
+       credentials: 'same-origin',
+       body: form.toString()
+     });
+
+     const payload = await response.json().catch(() => ({}));
+     if (response.status === 401) {
+       showLogin('Phiên đăng nhập đã hết hạn');
+       return;
+     }
+     if (!response.ok || payload.success === false) {
+       throw new Error(payload.message || `HTTP ${response.status}`);
+     }
+
+     alert(`Thanh toán thành công: ${Number(payload.tongTien || window.pendingPayment.totalCost).toLocaleString('vi-VN', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}đ\n\nMáy ${window.pendingPayment.machineName} đã sẵn sàng phục vụ khách hàng tiếp theo.`);
      closePaymentModal();
      await loadMachinesFromBackend();
    } catch (error) {
      console.error('Payment confirmation failed', error);
-     alert('Xác nhận thanh toán thất bại');
+     alert(error.message || 'Xác nhận thanh toán thất bại');
    }
  }
 
@@ -2485,6 +2595,11 @@ async function loadMachinesFromBackend() {
       headers: { 'Accept': 'application/json' },
       credentials: 'same-origin'
     });
+
+    if (response.status === 401) {
+      showLogin('Vui lòng đăng nhập để tiếp tục');
+      return;
+    }
 
     if (!response.ok) {
       throw new Error(`Backend trả về HTTP ${response.status}`);

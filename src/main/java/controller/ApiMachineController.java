@@ -1,6 +1,7 @@
 package controller;
 
 import com.google.gson.Gson;
+import dao.HoaDonDAO;
 import dao.LuotChoiDAO;
 import dao.MayPSDAO;
 import jakarta.servlet.annotation.WebServlet;
@@ -15,6 +16,8 @@ import utils.DBConnection;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -24,44 +27,44 @@ import java.util.Optional;
 public class ApiMachineController extends HttpServlet {
     private final MayPSDAO mayPSDAO = new MayPSDAO();
     private final LuotChoiDAO luotChoiDAO = new LuotChoiDAO();
+    private final HoaDonDAO hoaDonDAO = new HoaDonDAO();
     private final Gson gson = new Gson();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
         response.setContentType("application/json;charset=UTF-8");
         response.setCharacterEncoding("UTF-8");
-        
+
         List<MayPS> machines = mayPSDAO.getAllMay();
         List<Map<String, Object>> result = new java.util.ArrayList<>();
-        
+
         for (MayPS machine : machines) {
             Map<String, Object> item = new java.util.HashMap<>();
             item.put("id", machine.getId());
             item.put("tenmay", machine.getTenMay());
             item.put("tinhtrang", machine.getTinhTrang());
             item.put("ghichu", machine.getGhiChu());
-            
-            // Fetch active session if machine is in use
-            java.util.Optional<LuotChoi> activeSession = luotChoiDAO.findActiveByMayId(machine.getId());
+
+            Optional<LuotChoi> activeSession = luotChoiDAO.findActiveByMayId(machine.getId());
             if (activeSession.isPresent()) {
                 LuotChoi session = activeSession.get();
-                long minutesElapsed = Math.max(0, java.time.Duration.between(
-                    session.getThoiGianBatDau().toInstant(),
-                    java.time.Instant.now()
+                long minutesElapsed = Math.max(0, Duration.between(
+                        session.getThoiGianBatDau().toInstant(),
+                        Instant.now()
                 ).toMinutes());
-                
+
                 double estimatedCost = session.getDonGiaGio() * (minutesElapsed / 60.0);
-                
+
                 item.put("luotchoiId", session.getId());
                 item.put("thoiGianBatDau", session.getThoiGianBatDau().getTime());
                 item.put("minutesElapsed", minutesElapsed);
                 item.put("estimatedCost", estimatedCost);
                 item.put("donGiaGio", session.getDonGiaGio());
             }
-            
+
             result.add(item);
         }
-        
+
         response.getWriter().write(gson.toJson(result));
     }
 
@@ -78,11 +81,10 @@ public class ApiMachineController extends HttpServlet {
         }
 
         int machineId = parseInt(request.getParameter("id"), -1);
-
         if (machineId <= 0) {
             write(response, HttpServletResponse.SC_BAD_REQUEST, Map.of(
                     "success", false,
-                    "message", "Thiếu id máy"
+                    "message", "Thieu id may"
             ));
             return;
         }
@@ -91,7 +93,7 @@ public class ApiMachineController extends HttpServlet {
         if (machineOpt.isEmpty()) {
             write(response, HttpServletResponse.SC_NOT_FOUND, Map.of(
                     "success", false,
-                    "message", "Không tìm thấy máy"
+                    "message", "Khong tim thay may"
             ));
             return;
         }
@@ -108,7 +110,7 @@ public class ApiMachineController extends HttpServlet {
 
         write(response, HttpServletResponse.SC_BAD_REQUEST, Map.of(
                 "success", false,
-                "message", "Action không hợp lệ"
+                "message", "Action khong hop le"
         ));
     }
 
@@ -119,7 +121,7 @@ public class ApiMachineController extends HttpServlet {
         if (name.isEmpty()) {
             write(response, HttpServletResponse.SC_BAD_REQUEST, Map.of(
                     "success", false,
-                    "message", "Tên máy không được để trống"
+                    "message", "Ten may khong duoc de trong"
             ));
             return;
         }
@@ -138,13 +140,13 @@ public class ApiMachineController extends HttpServlet {
                         MayPS newMachine = mayPSDAO.findById(newId).orElse(new MayPS(newId, name, "BINH_THUONG", note));
                         write(response, HttpServletResponse.SC_CREATED, Map.of(
                                 "success", true,
-                                "message", "Đã thêm máy mới thành công",
+                                "message", "Da them may moi thanh cong",
                                 "machine", newMachine
                         ));
                     } else {
                         write(response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, Map.of(
                                 "success", false,
-                                "message", "Không thể lấy ID máy mới"
+                                "message", "Khong the lay ID may moi"
                         ));
                     }
                 }
@@ -152,7 +154,7 @@ public class ApiMachineController extends HttpServlet {
         } catch (Exception e) {
             write(response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, Map.of(
                     "success", false,
-                    "message", "Thêm máy thất bại: " + e.getMessage()
+                    "message", "Them may that bai: " + e.getMessage()
             ));
         }
     }
@@ -161,7 +163,7 @@ public class ApiMachineController extends HttpServlet {
         if (isMachineInUse(machine)) {
             write(response, HttpServletResponse.SC_CONFLICT, Map.of(
                     "success", false,
-                    "message", "Máy đang được mở rồi"
+                    "message", "May dang duoc mo roi"
             ));
             return;
         }
@@ -178,7 +180,7 @@ public class ApiMachineController extends HttpServlet {
                     conn.rollback();
                     write(response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, Map.of(
                             "success", false,
-                            "message", "Không thể mở máy"
+                            "message", "Khong the mo may"
                     ));
                     return;
                 }
@@ -192,7 +194,7 @@ public class ApiMachineController extends HttpServlet {
         } catch (Exception e) {
             write(response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, Map.of(
                     "success", false,
-                    "message", "Không thể mở máy: " + e.getMessage()
+                    "message", "Khong the mo may: " + e.getMessage()
             ));
             return;
         }
@@ -200,13 +202,28 @@ public class ApiMachineController extends HttpServlet {
         int sessionId = luotChoiDAO.findActiveByMayId(machine.getId()).map(session -> session.getId()).orElse(-1);
         write(response, HttpServletResponse.SC_OK, Map.of(
                 "success", true,
-                "message", "Đã mở máy",
+                "message", "Da mo may",
                 "machine", mayPSDAO.findById(machine.getId()).orElse(machine),
                 "sessionId", sessionId
         ));
     }
 
     private void handleClose(HttpServletResponse response, MayPS machine) throws IOException {
+        Optional<LuotChoi> activeSessionOpt = luotChoiDAO.findActiveByMayId(machine.getId());
+        if (activeSessionOpt.isEmpty()) {
+            write(response, HttpServletResponse.SC_CONFLICT, Map.of(
+                    "success", false,
+                    "message", "Khong tim thay luot choi dang hoat dong"
+            ));
+            return;
+        }
+
+        LuotChoi activeSession = activeSessionOpt.get();
+        long minutesPlayed = Math.max(1, Duration.between(
+                activeSession.getThoiGianBatDau().toInstant(),
+                Instant.now()
+        ).toMinutes());
+
         try (Connection conn = DBConnection.getConnection()) {
             conn.setAutoCommit(false);
             Optional<Double> totalOpt;
@@ -216,7 +233,7 @@ public class ApiMachineController extends HttpServlet {
                     conn.rollback();
                     write(response, HttpServletResponse.SC_CONFLICT, Map.of(
                             "success", false,
-                            "message", "Máy chưa có lượt chơi đang hoạt động"
+                            "message", "Khong tim thay luot choi dang hoat dong"
                     ));
                     return;
                 }
@@ -226,7 +243,7 @@ public class ApiMachineController extends HttpServlet {
                     conn.rollback();
                     write(response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, Map.of(
                             "success", false,
-                            "message", "Không thể đóng máy"
+                            "message", "Khong the dong may"
                     ));
                     return;
                 }
@@ -238,16 +255,24 @@ public class ApiMachineController extends HttpServlet {
                 conn.setAutoCommit(true);
             }
 
+            double totalHoursMoney = totalOpt.get();
+            if (hoaDonDAO.findByLuotChoiId(activeSession.getId()).isEmpty()) {
+                hoaDonDAO.create(activeSession.getId(), totalHoursMoney, 0d, 0d, totalHoursMoney);
+            }
+
             write(response, HttpServletResponse.SC_OK, Map.of(
                     "success", true,
-                    "message", "Đã đóng máy",
-                    "totalHoursMoney", totalOpt.get(),
+                    "message", "Da dong may",
+                    "luotchoiId", activeSession.getId(),
+                    "minutesPlayed", minutesPlayed,
+                    "donGiaGio", activeSession.getDonGiaGio(),
+                    "totalHoursMoney", totalHoursMoney,
                     "machine", mayPSDAO.findById(machine.getId()).orElse(machine)
             ));
         } catch (Exception e) {
             write(response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, Map.of(
                     "success", false,
-                    "message", "Không thể đóng máy: " + e.getMessage()
+                    "message", "Khong the dong may: " + e.getMessage()
             ));
         }
     }
@@ -291,4 +316,3 @@ public class ApiMachineController extends HttpServlet {
         response.getWriter().write(gson.toJson(payload));
     }
 }
-

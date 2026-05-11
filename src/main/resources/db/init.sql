@@ -41,8 +41,12 @@ ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO mayps (tenmay, tinhtrang, ghichu)
 SELECT 'May ' || i, 'BINH_THUONG', NULL
-FROM generate_series(1, 12) AS i
-WHERE NOT EXISTS (SELECT 1 FROM mayps);
+FROM generate_series(1, 20) AS i
+WHERE NOT EXISTS (
+    SELECT 1
+    FROM mayps
+    WHERE tenmay = 'May ' || i
+);
 
 INSERT INTO dichvu (tendichvu, dongia, loai)
 SELECT seed.tendichvu, seed.dongia, seed.loai

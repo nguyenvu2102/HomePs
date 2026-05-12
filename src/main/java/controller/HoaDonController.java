@@ -1,8 +1,9 @@
 package controller;
 
-import dao.HoaDonDAO;
+import com.google.gson.Gson;
 import dao.ChiTietHoaDonDAO;
 import dao.DichVuDAO;
+import dao.HoaDonDAO;
 import dao.LuotChoiDAO;
 import dao.SuKienDAO;
 import jakarta.servlet.annotation.WebServlet;
@@ -17,6 +18,7 @@ import model.SuKien;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @WebServlet(urlPatterns = {"/hoadon"})
@@ -26,6 +28,7 @@ public class HoaDonController extends HttpServlet {
     private final DichVuDAO dichVuDAO = new DichVuDAO();
     private final LuotChoiDAO luotChoiDAO = new LuotChoiDAO();
     private final SuKienDAO suKienDAO = new SuKienDAO();
+    private final Gson gson = new Gson();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -35,34 +38,49 @@ public class HoaDonController extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        response.setContentType("application/json;charset=UTF-8");
+        response.setCharacterEncoding("UTF-8");
+
         String action = request.getParameter("action");
 
         if ("addService".equalsIgnoreCase(action)) {
             themDichVu(request, response);
-        } else if ("checkout".equalsIgnoreCase(action)) {
-            thanhToan(request, response);
+            return;
         }
 
-        response.sendRedirect(request.getContextPath() + "/home");
+        if ("checkout".equalsIgnoreCase(action)) {
+            thanhToan(request, response);
+            return;
+        }
+
+        write(response, HttpServletResponse.SC_BAD_REQUEST, Map.of(
+                "success", false,
+                "message", "Action khong hop le"
+        ));
     }
 
-
-    private void themDichVu(HttpServletRequest request, HttpServletResponse response) {
+    private void themDichVu(HttpServletRequest request, HttpServletResponse response) throws IOException {
         try {
             int luotChoiId = parseInt(request.getParameter("luotChoiId"), -1);
             int dichVuId = parseInt(request.getParameter("dichVuId"), -1);
             int soLuong = parseInt(request.getParameter("soLuong"), 1);
 
             if (luotChoiId <= 0 || dichVuId <= 0 || soLuong <= 0) {
-                setFlash(request, "Invalid input parameters.");
+                write(response, HttpServletResponse.SC_BAD_REQUEST, Map.of(
+                        "success", false,
+                        "message", "Invalid input parameters."
+                ));
                 return;
             }
 
             Optional<HoaDon> hoaDonOpt = hoaDonDAO.findByLuotChoiId(luotChoiId);
             Optional<DichVu> dichVuOpt = dichVuDAO.findById(dichVuId);
 
-            if (!hoaDonOpt.isPresent() || !dichVuOpt.isPresent()) {
-                setFlash(request, "Invoice or service not found.");
+            if (hoaDonOpt.isEmpty() || dichVuOpt.isEmpty()) {
+                write(response, HttpServletResponse.SC_NOT_FOUND, Map.of(
+                        "success", false,
+                        "message", "Invoice or service not found."
+                ));
                 return;
             }
 
@@ -70,53 +88,85 @@ public class HoaDonController extends HttpServlet {
             DichVu dichVu = dichVuOpt.get();
             double thanhTien = dichVu.getDonGia() * soLuong;
 
-            if (chiTietDAO.create(hoaDon.getId(), dichVuId, dichVu.getTenDichVu(), soLuong, 
-                                 dichVu.getDonGia(), thanhTien)) {
-                // Cập nhật hoá đơn
-                double tienDichVuMoi = hoaDon.getTienDichVu() + thanhTien;
-                double tongTienMoi = hoaDon.getTienChoi() + tienDichVuMoi - hoaDon.getTienKhuyenMai();
-                
-                hoaDonDAO.updateStatus(hoaDon.getId(), "CHUA_THANH_TOAN");
-                setFlash(request, "Service added successfully.");
+            if (chiTietDAO.create(hoaDon.getId(), dichVuId, dichVu.getTenDichVu(), soLuong, dichVu.getDonGia(), thanhTien)) {
+                write(response, HttpServletResponse.SC_OK, Map.of(
+                        "success", true,
+                        "message", "Service added successfully."
+                ));
             } else {
-                setFlash(request, "Cannot add service.");
+                write(response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, Map.of(
+                        "success", false,
+                        "message", "Cannot add service."
+                ));
             }
         } catch (Exception e) {
-            setFlash(request, "Error: " + e.getMessage());
+            write(response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, Map.of(
+                    "success", false,
+                    "message", "Error: " + e.getMessage()
+            ));
         }
     }
 
-    private void thanhToan(HttpServletRequest request, HttpServletResponse response) {
+    private void thanhToan(HttpServletRequest request, HttpServletResponse response) throws IOException {
         try {
             int luotChoiId = parseInt(request.getParameter("luotChoiId"), -1);
-
             if (luotChoiId <= 0) {
-                setFlash(request, "Invalid play session.");
+                write(response, HttpServletResponse.SC_BAD_REQUEST, Map.of(
+                        "success", false,
+                        "message", "Invalid play session."
+                ));
                 return;
             }
 
-            Optional<HoaDon> hoaDonOpt = hoaDonDAO.findByLuotChoiId(luotChoiId);
-            if (!hoaDonOpt.isPresent()) {
-                setFlash(request, "Invoice not found.");
+            HoaDon hoaDon = resolveInvoice(luotChoiId);
+            if (hoaDon == null) {
+                write(response, HttpServletResponse.SC_NOT_FOUND, Map.of(
+                        "success", false,
+                        "message", "Invoice not found."
+                ));
                 return;
             }
 
-            HoaDon hoaDon = hoaDonOpt.get();
-            
-            // Áp dụng các sự kiện giảm giá
             double tienKhuyenMai = tinhKhuyenMai(luotChoiId, hoaDon.getTienChoi(), hoaDon.getTienDichVu());
             double tongTienFinal = hoaDon.getTienChoi() + hoaDon.getTienDichVu() - tienKhuyenMai;
 
             hoaDonDAO.updateStatus(hoaDon.getId(), "DA_THANH_TOAN");
-            setFlash(request, "Payment completed. Total: " + String.format("%.0f", tongTienFinal) + " VND");
+            write(response, HttpServletResponse.SC_OK, Map.of(
+                    "success", true,
+                    "message", "Payment completed.",
+                    "luotchoiId", luotChoiId,
+                    "tienChoi", hoaDon.getTienChoi(),
+                    "tienDichVu", hoaDon.getTienDichVu(),
+                    "tienKhuyenMai", tienKhuyenMai,
+                    "tongTien", tongTienFinal
+            ));
         } catch (Exception e) {
-            setFlash(request, "Payment error: " + e.getMessage());
+            write(response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, Map.of(
+                    "success", false,
+                    "message", "Payment error: " + e.getMessage()
+            ));
         }
+    }
+
+    private HoaDon resolveInvoice(int luotChoiId) {
+        Optional<HoaDon> existing = hoaDonDAO.findByLuotChoiId(luotChoiId);
+        if (existing.isPresent()) {
+            return existing.get();
+        }
+
+        Optional<LuotChoi> luotChoiOpt = luotChoiDAO.findById(luotChoiId);
+        if (luotChoiOpt.isEmpty()) {
+            return null;
+        }
+
+        LuotChoi luotChoi = luotChoiOpt.get();
+        double tienChoi = luotChoi.getTongTienGio();
+        hoaDonDAO.create(luotChoiId, tienChoi, 0d, 0d, tienChoi);
+        return hoaDonDAO.findByLuotChoiId(luotChoiId).orElse(null);
     }
 
     private double tinhKhuyenMai(int luotChoiId, double tienChoi, double tienDichVu) {
         try {
-            // Note: This is a simplified version and needs proper integration with the actual lượt chơi
             LocalDateTime thoiGianChoi = LocalDateTime.now();
             List<SuKien> suKienHoatDong = suKienDAO.getActiveByTime(thoiGianChoi);
 
@@ -141,9 +191,8 @@ public class HoaDonController extends HttpServlet {
         }
     }
 
-    private static void setFlash(HttpServletRequest request, String message) {
-        request.getSession(true).setAttribute("flashMessage", message);
+    private void write(HttpServletResponse response, int status, Object payload) throws IOException {
+        response.setStatus(status);
+        response.getWriter().write(gson.toJson(payload));
     }
 }
-
-

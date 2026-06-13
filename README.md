@@ -37,26 +37,6 @@ User: postgres
 Password: postgres
 ```
 
-## Test local bằng Maven
-
-Nếu test với database local `HomePS` và mật khẩu PostgreSQL của máy:
-
-```powershell
-$env:DB_URL='jdbc:postgresql://localhost:5432/HomePS'
-$env:DB_USER='postgres'
-$env:DB_PASSWORD='Nguyenvu@2102'
-.\maven\bin\mvn.cmd test
-```
-
-Nếu dùng database Docker:
-
-```powershell
-$env:DB_URL='jdbc:postgresql://localhost:5432/homeps'
-$env:DB_USER='postgres'
-$env:DB_PASSWORD='postgres'
-.\maven\bin\mvn.cmd test
-```
-
 ## Deploy lại sau khi sửa code
 
 Sau khi sửa Java, HTML, CSS, JS hoặc SQL init:
@@ -109,20 +89,6 @@ Nếu app chưa chạy lại:
 
 ```powershell
 docker compose up -d --build
-```
-
-### Sai mật khẩu database khi test
-
-Với Docker dùng mật khẩu:
-
-```text
-postgres
-```
-
-Với database local trên máy đã test được mật khẩu:
-
-```text
-Nguyenvu@2102
 ```
 
 ### Port 5432 hoặc 8080 bị chiếm

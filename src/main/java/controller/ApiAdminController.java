@@ -105,6 +105,7 @@ public class ApiAdminController extends HttpServlet {
         String sql = "INSERT INTO nhanvien (tennhanvien, sodienthoai, chucvu, trangthai) VALUES (?, ?, ?, ?)";
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
+            syncSerialSequence(conn, "nhanvien", "id");
             ps.setString(1, name);
             setNullableString(ps, 2, phone);
             ps.setString(3, role);
@@ -372,6 +373,14 @@ public class ApiAdminController extends HttpServlet {
             ps.setString(index, null);
         } else {
             ps.setString(index, value);
+        }
+    }
+
+    private static void syncSerialSequence(Connection conn, String tableName, String idColumn) throws Exception {
+        String sql = "SELECT setval(pg_get_serial_sequence('" + tableName + "', '" + idColumn + "'), " +
+                "COALESCE((SELECT MAX(" + idColumn + ") FROM " + tableName + "), 1), true)";
+        try (Statement st = conn.createStatement()) {
+            st.execute(sql);
         }
     }
 

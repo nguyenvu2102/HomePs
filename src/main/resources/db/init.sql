@@ -39,6 +39,8 @@ INSERT INTO nhanvien (id, tennhanvien, sodienthoai, chucvu, trangthai)
 VALUES (2, 'Nhan vien 1', '0000000001', 'NHAN_VIEN', 'DANG_LAM')
 ON CONFLICT (id) DO NOTHING;
 
+SELECT setval(pg_get_serial_sequence('nhanvien', 'id'), COALESCE((SELECT MAX(id) FROM nhanvien), 1), true);
+
 INSERT INTO mayps (tenmay, tinhtrang, ghichu)
 SELECT 'May ' || i, 'BINH_THUONG', NULL
 FROM generate_series(1, 20) AS i

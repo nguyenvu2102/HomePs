@@ -851,13 +851,14 @@ body {
     <div class="login-subtitle">Hệ thống quản lý cửa hàng game PS</div>
     <div class="form-group">
       <label class="form-label">Tài khoản</label>
-      <input class="form-input" type="text" placeholder="Nhập tên đăng nhập" value="admin">
+      <input id="login-username" class="form-input" type="text" placeholder="Nhập tên đăng nhập" value="admin">
     </div>
     <div class="form-group">
       <label class="form-label">Mật khẩu</label>
-      <input class="form-input" type="password" placeholder="••••••••" value="password">
+      <input id="login-password" class="form-input" type="password" placeholder="••••••••" value="admin">
     </div>
-    <button class="btn btn-primary" onclick="showApp()" style="width:100%;justify-content:center;padding:12px;margin-top:8px;">
+    <div id="login-error" style="display:none;margin-top:8px;font-size:12px;color:#ef4444;"></div>
+    <button id="login-button" class="btn btn-primary" onclick="login()" style="width:100%;justify-content:center;padding:12px;margin-top:8px;">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
       Đăng nhập
     </button>
@@ -954,195 +955,52 @@ body {
           <div class="stats-row">
             <div class="stat-card blue">
               <div class="stat-label">Tổng máy</div>
-              <div class="stat-value">12</div>
-              <div class="stat-change">+2 máy mới tháng này</div>
+              <div class="stat-value">0</div>
+              <div class="stat-change">Đang tải...</div>
             </div>
             <div class="stat-card green">
               <div class="stat-label">Đang hoạt động</div>
-              <div class="stat-value">5</div>
-              <div class="mini-bars">
-                <div class="mini-bar" style="height:60%;background:var(--accent-emerald)"></div>
-                <div class="mini-bar" style="height:80%;background:var(--accent-emerald)"></div>
-                <div class="mini-bar" style="height:45%;background:var(--accent-emerald)"></div>
-                <div class="mini-bar" style="height:90%;background:var(--accent-emerald)"></div>
-                <div class="mini-bar" style="height:70%;background:var(--accent-emerald)"></div>
-                <div class="mini-bar" style="height:55%;background:var(--accent-emerald)"></div>
-                <div class="mini-bar" style="height:85%;background:var(--accent-emerald)"></div>
-              </div>
+              <div class="stat-value">0</div>
+               <div class="mini-bars"></div>
             </div>
             <div class="stat-card amber">
               <div class="stat-label">Trống</div>
-              <div class="stat-value">5</div>
+              <div class="stat-value">0</div>
               <div class="stat-change">Sẵn sàng phục vụ</div>
             </div>
             <div class="stat-card red">
               <div class="stat-label">Bảo trì / Hỏng</div>
-              <div class="stat-value">2</div>
-              <div class="stat-change">PS-06, PS-09</div>
+              <div class="stat-value">0</div>
+              <div class="stat-change"></div>
             </div>
           </div>
 
           <!-- Filter -->
           <div class="filter-pills">
-            <button class="filter-pill active">Tất cả (12)</button>
-            <button class="filter-pill">🟢 Đang chơi (5)</button>
-            <button class="filter-pill">⚪ Trống (5)</button>
-            <button class="filter-pill">🔴 Bảo trì (2)</button>
+            <button class="filter-pill active">Tất cả (0)</button>
+            <button class="filter-pill">🟢 Đang chơi (0)</button>
+            <button class="filter-pill">⚪ Trống (0)</button>
+            <button class="filter-pill">🔴 Bảo trì (0)</button>
           </div>
 
           <!-- Machine grid -->
           <div id="machine-grid" class="machine-grid">
-            <div class="machine-card vacant" onclick="selectMachine(1)">
-              <div class="machine-id">PS 01</div>
-              <div class="machine-label">Trống</div>
-            </div>
-            <div class="machine-card in-use selected" onclick="selectMachine(2)">
-              <div class="machine-id">PS 02</div>
-              <div class="machine-label">Đang chơi</div>
-              <div class="machine-time">2h 35m</div>
-              <div class="machine-customer">Nguyễn Minh</div>
-            </div>
-            <div class="machine-card in-use" onclick="selectMachine(3)">
-              <div class="machine-id">PS 03</div>
-              <div class="machine-label">Đang chơi</div>
-              <div class="machine-time">1h 12m</div>
-              <div class="machine-customer">Trần Văn B</div>
-            </div>
-            <div class="machine-card vacant" onclick="selectMachine(4)">
-              <div class="machine-id">PS 04</div>
-              <div class="machine-label">Trống</div>
-            </div>
-            <div class="machine-card in-use" onclick="selectMachine(5)">
-              <div class="machine-id">PS 05</div>
-              <div class="machine-label">Đang chơi</div>
-              <div class="machine-time">0h 45m</div>
-              <div class="machine-customer">Lê Hoàng C</div>
-            </div>
-            <div class="machine-card maintenance" onclick="selectMachine(6)">
-              <div class="machine-id">PS 06</div>
-              <div class="machine-label">Bảo trì</div>
-            </div>
-            <div class="machine-card vacant" onclick="selectMachine(7)">
-              <div class="machine-id">PS 07</div>
-              <div class="machine-label">Trống</div>
-            </div>
-            <div class="machine-card in-use" onclick="selectMachine(8)">
-              <div class="machine-id">PS 08</div>
-              <div class="machine-label">Đang chơi</div>
-              <div class="machine-time">3h 05m</div>
-              <div class="machine-customer">Phạm Quốc D</div>
-            </div>
-            <div class="machine-card vacant" onclick="selectMachine(9)">
-              <div class="machine-id">PS 09</div>
-              <div class="machine-label">Trống</div>
-            </div>
-            <div class="machine-card in-use" onclick="selectMachine(10)">
-              <div class="machine-id">PS 10</div>
-              <div class="machine-label">Đang chơi</div>
-              <div class="machine-time">0h 20m</div>
-              <div class="machine-customer">Hoàng Thị E</div>
-            </div>
-            <div class="machine-card vacant" onclick="selectMachine(11)">
-              <div class="machine-id">PS 11</div>
-              <div class="machine-label">Trống</div>
-            </div>
-            <div class="machine-card maintenance" onclick="selectMachine(12)">
-              <div class="machine-id">PS 12</div>
-              <div class="machine-label">Hỏng</div>
-            </div>
+             <!-- Dữ liệu máy sẽ được render ở đây bằng JS -->
           </div>
         </div>
 
         <!-- RIGHT PANEL: Machine Details -->
         <div class="right-panel" id="right-panel">
           <div class="panel-header">
-            <h3>Chi tiết PS 02</h3>
+            <h3>Chi tiết máy</h3>
             <button class="panel-close" onclick="togglePanel()">✕</button>
           </div>
-          <div class="panel-body">
-            <div class="detail-section">
-              <div style="text-align:center;margin-bottom:16px;">
-                <div style="font-size:40px;font-weight:800;color:var(--accent-emerald);">PS 02</div>
-                <span class="badge badge-green"><span class="badge-dot"></span>Đang chơi</span>
-              </div>
-            </div>
-
-            <div class="detail-section">
-              <h4>Thông tin lượt chơi</h4>
-              <div class="detail-row">
-                <span class="label">CCCD khách</span>
-                <span class="value" style="font-family:var(--mono);">079****5678</span>
-              </div>
-              <div class="detail-row">
-                <span class="label">Bắt đầu</span>
-                <span class="value">11:58 AM</span>
-              </div>
-              <div class="detail-row">
-                <span class="label">Thời gian chơi</span>
-                <span class="value" style="color:var(--accent-cyan);font-family:var(--mono);">2h 35m</span>
-              </div>
-              <div class="detail-row">
-                <span class="label">Tiền giờ (30.000đ/h)</span>
-                <span class="value" style="color:var(--accent-amber);font-family:var(--mono);">77.500đ</span>
-              </div>
-            </div>
-
-            <div class="divider"></div>
-
-            <div class="detail-section">
-              <div class="section-header">
-                <h4 style="margin:0;">Dịch vụ đã gọi</h4>
-                <button class="btn btn-ghost" style="padding:4px 10px;font-size:11px;" onclick="switchPage('services')">+ Gọi thêm</button>
-              </div>
-              <div class="order-item">
-                <div class="order-item-icon" style="background:rgba(245,158,11,0.15);">🍜</div>
-                <div class="order-item-info">
-                  <div class="order-item-name">Mì xào bò</div>
-                  <div class="order-item-qty">x1 • 35.000đ</div>
-                </div>
-                <div class="order-item-price">35.000đ</div>
-              </div>
-              <div class="order-item">
-                <div class="order-item-icon" style="background:rgba(6,182,212,0.15);">🥤</div>
-                <div class="order-item-info">
-                  <div class="order-item-name">Trà đào</div>
-                  <div class="order-item-qty">x2 • 20.000đ/ly</div>
-                </div>
-                <div class="order-item-price">40.000đ</div>
-              </div>
-              <div class="order-item">
-                <div class="order-item-icon" style="background:rgba(139,92,246,0.15);">🍿</div>
-                <div class="order-item-info">
-                  <div class="order-item-name">Bắp rang bơ</div>
-                  <div class="order-item-qty">x1 • 15.000đ</div>
-                </div>
-                <div class="order-item-price">15.000đ</div>
-              </div>
-            </div>
-
-            <div class="divider"></div>
-
-            <div class="detail-section">
-              <h4>Tổng tạm tính</h4>
-              <div class="detail-row">
-                <span class="label">Tiền giờ chơi</span>
-                <span class="value" style="font-family:var(--mono);">77.500đ</span>
-              </div>
-              <div class="detail-row">
-                <span class="label">Tiền dịch vụ</span>
-                <span class="value" style="font-family:var(--mono);">90.000đ</span>
-              </div>
-              <div class="detail-row" style="color:var(--accent-emerald);">
-                <span class="label">Giảm giá (Khung giờ trưa -20%)</span>
-                <span class="value" style="font-family:var(--mono);">-15.500đ</span>
-              </div>
-              <div class="detail-row" style="font-size:18px;font-weight:800;padding-top:10px;border-top:1px solid var(--border-color);margin-top:8px;">
-                <span>Tổng cộng</span>
-                <span style="color:var(--accent-amber);font-family:var(--mono);">152.000đ</span>
-              </div>
-            </div>
+          <div class="panel-body" id="machine-details-body">
+             <!-- Chi tiết máy sẽ được render ở đây bằng JS -->
           </div>
-          <div class="panel-footer" id="machine-action-footer"></div>
+          <div class="panel-footer" id="machine-action-footer">
+             <!-- Actions của máy sẽ được render ở đây bằng JS -->
+          </div>
         </div>
       </div>
       <div class="screen-label">UC01-UC09 — Quản lý máy PS & Lượt chơi</div>
@@ -1162,7 +1020,7 @@ body {
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
             <input placeholder="Tìm kiếm dịch vụ...">
           </div>
-          <button class="btn btn-primary">
+              <button class="btn btn-primary" onclick="openServiceCatalog()">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             Thêm dịch vụ
           </button>
@@ -1176,92 +1034,7 @@ body {
           <button class="tab-btn">🍿 Snack</button>
         </div>
 
-        <div class="service-grid">
-          <div class="service-card">
-            <div class="service-emoji">🍜</div>
-            <div class="service-name">Mì xào bò</div>
-            <div class="service-price">35.000đ</div>
-            <div class="service-category">Đồ ăn</div>
-            <span class="badge badge-green" style="margin-top:8px;"><span class="badge-dot"></span>Đang bán</span>
-          </div>
-          <div class="service-card">
-            <div class="service-emoji">🍛</div>
-            <div class="service-name">Cơm chiên dương châu</div>
-            <div class="service-price">40.000đ</div>
-            <div class="service-category">Đồ ăn</div>
-            <span class="badge badge-green" style="margin-top:8px;"><span class="badge-dot"></span>Đang bán</span>
-          </div>
-          <div class="service-card">
-            <div class="service-emoji">🌭</div>
-            <div class="service-name">Hotdog phô mai</div>
-            <div class="service-price">25.000đ</div>
-            <div class="service-category">Đồ ăn</div>
-            <span class="badge badge-green" style="margin-top:8px;"><span class="badge-dot"></span>Đang bán</span>
-          </div>
-          <div class="service-card">
-            <div class="service-emoji">🥤</div>
-            <div class="service-name">Trà đào cam sả</div>
-            <div class="service-price">20.000đ</div>
-            <div class="service-category">Đồ uống</div>
-            <span class="badge badge-green" style="margin-top:8px;"><span class="badge-dot"></span>Đang bán</span>
-          </div>
-          <div class="service-card">
-            <div class="service-emoji">☕</div>
-            <div class="service-name">Cà phê sữa đá</div>
-            <div class="service-price">18.000đ</div>
-            <div class="service-category">Đồ uống</div>
-            <span class="badge badge-green" style="margin-top:8px;"><span class="badge-dot"></span>Đang bán</span>
-          </div>
-          <div class="service-card">
-            <div class="service-emoji">🧃</div>
-            <div class="service-name">Nước ép cam</div>
-            <div class="service-price">22.000đ</div>
-            <div class="service-category">Đồ uống</div>
-            <span class="badge badge-green" style="margin-top:8px;"><span class="badge-dot"></span>Đang bán</span>
-          </div>
-          <div class="service-card">
-            <div class="service-emoji">🥫</div>
-            <div class="service-name">Coca Cola</div>
-            <div class="service-price">12.000đ</div>
-            <div class="service-category">Đồ uống</div>
-            <span class="badge badge-green" style="margin-top:8px;"><span class="badge-dot"></span>Đang bán</span>
-          </div>
-          <div class="service-card">
-            <div class="service-emoji">🍿</div>
-            <div class="service-name">Bắp rang bơ</div>
-            <div class="service-price">15.000đ</div>
-            <div class="service-category">Snack</div>
-            <span class="badge badge-green" style="margin-top:8px;"><span class="badge-dot"></span>Đang bán</span>
-          </div>
-          <div class="service-card">
-            <div class="service-emoji">🍪</div>
-            <div class="service-name">Bánh quy hỗn hợp</div>
-            <div class="service-price">10.000đ</div>
-            <div class="service-category">Snack</div>
-            <span class="badge badge-red" style="margin-top:8px;"><span class="badge-dot"></span>Hết hàng</span>
-          </div>
-          <div class="service-card">
-            <div class="service-emoji">🧋</div>
-            <div class="service-name">Trà sữa trân châu</div>
-            <div class="service-price">25.000đ</div>
-            <div class="service-category">Đồ uống</div>
-            <span class="badge badge-green" style="margin-top:8px;"><span class="badge-dot"></span>Đang bán</span>
-          </div>
-          <div class="service-card">
-            <div class="service-emoji">🍔</div>
-            <div class="service-name">Burger gà giòn</div>
-            <div class="service-price">30.000đ</div>
-            <div class="service-category">Đồ ăn</div>
-            <span class="badge badge-green" style="margin-top:8px;"><span class="badge-dot"></span>Đang bán</span>
-          </div>
-          <div class="service-card">
-            <div class="service-emoji">🍟</div>
-            <div class="service-name">Khoai tây chiên</div>
-            <div class="service-price">20.000đ</div>
-            <div class="service-category">Snack</div>
-            <span class="badge badge-green" style="margin-top:8px;"><span class="badge-dot"></span>Đang bán</span>
-          </div>
-        </div>
+        <div id="service-grid" class="service-grid"></div>
       </div>
       <div class="screen-label">UC16-UC19 — Quản lý & Gọi dịch vụ</div>
     </div>
@@ -1341,7 +1114,7 @@ body {
                   <td style="font-family:var(--mono);font-weight:600;">HD-2024003</td>
                   <td><span class="badge badge-blue">PS 03</span></td>
                   <td>10:00</td>
-                  <td>—</td>
+                  <td style="color:var(--accent-cyan);">—</td>
                   <td style="font-family:var(--mono);color:var(--accent-cyan);">1h 12m ⏱</td>
                   <td style="font-family:var(--mono);">36.000đ</td>
                   <td style="font-family:var(--mono);">55.000đ</td>
@@ -1367,7 +1140,7 @@ body {
                   <td style="font-family:var(--mono);font-weight:600;">HD-2024005</td>
                   <td><span class="badge badge-blue">PS 10</span></td>
                   <td>13:50</td>
-                  <td>—</td>
+                  <td style="color:var(--accent-cyan);">—</td>
                   <td style="font-family:var(--mono);color:var(--accent-cyan);">0h 20m ⏱</td>
                   <td style="font-family:var(--mono);">10.000đ</td>
                   <td style="font-family:var(--mono);">12.000đ</td>
@@ -1984,6 +1757,34 @@ body {
    </div>
  </div>
 
+  <!-- Modal: Order Service -->
+  <div id="service-modal" class="modal" style="display:none;">
+    <div class="modal-overlay" onclick="closeServiceModal()"></div>
+    <div class="modal-content" style="background:var(--bg-card);border:1px solid var(--border-color);border-radius:var(--radius);padding:24px;min-width:560px;max-width:92vw;max-height:85vh;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:16px;overflow:hidden;">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;">
+        <div>
+          <h3 style="font-size:18px;font-weight:700;margin:0;">Gọi đồ ăn / đồ uống</h3>
+          <div id="service-modal-subtitle" style="margin-top:4px;font-size:13px;color:var(--text-secondary);">Chọn máy đang chơi để gọi dịch vụ</div>
+        </div>
+        <button style="background:none;border:none;color:var(--text-secondary);cursor:pointer;font-size:20px;" onclick="closeServiceModal()">✕</button>
+      </div>
+      <div class="search-box" style="width:100%;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input id="service-search-input" placeholder="Tìm món..." oninput="renderServiceCatalog()">
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="btn btn-ghost filter-service-btn active" data-filter="ALL" onclick="setServiceFilter('ALL')">Tất cả</button>
+        <button class="btn btn-ghost filter-service-btn" data-filter="DO_AN" onclick="setServiceFilter('DO_AN')">Đồ ăn</button>
+        <button class="btn btn-ghost filter-service-btn" data-filter="DO_UONG" onclick="setServiceFilter('DO_UONG')">Đồ uống</button>
+        <button class="btn btn-ghost filter-service-btn" data-filter="KHAC" onclick="setServiceFilter('KHAC')">Khác</button>
+      </div>
+      <div id="service-order-list" style="flex:1;overflow:auto;border:1px solid var(--border-color);border-radius:var(--radius-sm);padding:12px;background:var(--bg-secondary);"></div>
+      <div style="display:flex;justify-content:flex-end;gap:8px;">
+        <button type="button" class="btn btn-ghost" onclick="closeServiceModal()">Đóng</button>
+      </div>
+    </div>
+  </div>
+
  <style>
    .modal {
      position: fixed;
@@ -2037,6 +1838,32 @@ const machineState = {
    timeIntervals: {}
  };
 
+const serviceState = {
+  services: [],
+  filtered: [],
+  filter: 'ALL',
+  selectedMachineId: null,
+  selectedSessionId: null,
+  loading: false,
+  qtyById: {}
+};
+
+const DEMO_MACHINES = [
+  { id: 1, tenmay: 'PS 01', tinhtrang: 'DANG_CHOI', ghichu: 'Demo mode' },
+  { id: 2, tenmay: 'PS 02', tinhtrang: 'BINH_THUONG', ghichu: 'Demo mode' },
+  { id: 3, tenmay: 'PS 03', tinhtrang: 'BINH_THUONG', ghichu: 'Demo mode' }
+];
+
+const DEMO_SERVICES = [
+  { id: 1, tenDichVu: 'Mi xao bo', donGia: 35000, loai: 'DO_AN' },
+  { id: 2, tenDichVu: 'Tra dao', donGia: 20000, loai: 'DO_UONG' },
+  { id: 3, tenDichVu: 'Bap rang', donGia: 15000, loai: 'KHAC' }
+];
+
+function isDemoMode() {
+  return sessionStorage.getItem('homeps.authMode') === 'demo';
+}
+
 function updateClock() {
   const now = new Date();
   const clock = document.getElementById('live-clock');
@@ -2053,7 +1880,103 @@ document.getElementById('main-app').style.display = 'none';
 function showApp() {
   document.getElementById('login-screen').style.display = 'none';
   document.getElementById('main-app').style.display = 'flex';
+  if (isDemoMode()) {
+    loadDemoData();
+    return;
+  }
   loadMachinesFromBackend();
+  loadServicesFromBackend();
+}
+
+function loadDemoData() {
+  machineState.machines = DEMO_MACHINES.slice();
+  machineState.selectedId = DEMO_MACHINES[0]?.id || null;
+  serviceState.services = DEMO_SERVICES.slice();
+  serviceState.filtered = DEMO_SERVICES.slice();
+  renderMachineCards(machineState.machines);
+  renderServiceCatalog();
+}
+
+async function login() {
+  const usernameEl = document.getElementById('login-username');
+  const passwordEl = document.getElementById('login-password');
+  const errorEl = document.getElementById('login-error');
+  const buttonEl = document.getElementById('login-button');
+
+  const username = (usernameEl?.value || '').trim();
+  const password = (passwordEl?.value || '').trim();
+
+  if (!username || !password) {
+    if (errorEl) {
+      errorEl.style.display = 'block';
+      errorEl.textContent = 'Vui lòng nhập tên đăng nhập và mật khẩu.';
+    }
+    return;
+  }
+
+  try {
+    if (buttonEl) {
+      buttonEl.disabled = true;
+      buttonEl.textContent = 'Đang đăng nhập...';
+    }
+    if (errorEl) errorEl.style.display = 'none';
+
+    const form = new URLSearchParams();
+    form.set('username', username);
+    form.set('password', password);
+
+    const response = await fetch(`${APP_BASE}/login`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
+        'Accept': 'application/json'
+      },
+      body: form.toString(),
+      credentials: 'include'
+    });
+
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok || payload.success === false) {
+      throw new Error(payload.message || 'Sai tài khoản hoặc mật khẩu');
+    }
+
+    const displayName = payload.displayName || payload.username || username;
+    const role = payload.role || 'NHAN_VIEN';
+    const userLabel = document.getElementById('sidebar-user-name');
+    const roleLabel = document.getElementById('sidebar-user-role');
+    if (userLabel) userLabel.textContent = displayName;
+    if (roleLabel) roleLabel.textContent = role;
+
+    sessionStorage.removeItem('homeps.authMode');
+
+    showApp();
+  } catch (error) {
+    console.error('Login failed', error);
+    const fetchFailed = String(error?.message || '').toLowerCase().includes('failed to fetch') || String(error?.message || '').toLowerCase().includes('networkerror');
+    if (fetchFailed && ((username === 'admin' && password === 'admin') || (username === 'staff' && password === 'staff'))) {
+      sessionStorage.setItem('homeps.authMode', 'demo');
+      const userLabel = document.getElementById('sidebar-user-name');
+      const roleLabel = document.getElementById('sidebar-user-role');
+      if (userLabel) userLabel.textContent = username;
+      if (roleLabel) roleLabel.textContent = username === 'admin' ? 'ADMIN' : 'NHAN_VIEN';
+      if (errorEl) {
+        errorEl.style.display = 'block';
+        errorEl.style.color = '#f59e0b';
+        errorEl.textContent = 'Backend khong san sang, dang vao che do demo.';
+      }
+      showApp();
+      return;
+    }
+    if (errorEl) {
+      errorEl.style.display = 'block';
+      errorEl.textContent = error.message || 'Đăng nhập thất bại.';
+    }
+  } finally {
+    if (buttonEl) {
+      buttonEl.disabled = false;
+      buttonEl.textContent = 'Đăng nhập';
+    }
+  }
 }
 
 function switchPage(pageId, navElement) {
@@ -2078,25 +2001,41 @@ function normalizeMachine(machine) {
   const rawStatus = String(machine.tinhTrang ?? machine.tinhtrang ?? '').trim().toUpperCase();
   const note = String(machine.ghiChu ?? machine.ghichu ?? '').trim();
   const id = Number(machine.id);
-  const displayName = machine.tenMay || machine.tenmay || `PS ${String(id).padStart(2, '0')}`;
+  const displayName = machine.tenMay || machine.tenmay || (id ? `PS ${String(id).padStart(2, '0')}` : 'Máy chưa có mã');
+  let stateClass = 'vacant';
+  let label = 'Trống';
 
   if (['DANG_SU_DUNG', 'DANG_CHOI', 'IN_USE', 'BUSY'].includes(rawStatus)) {
-    return { id, displayName, stateClass: 'in-use', label: 'Đang chơi', note };
+    stateClass = 'in-use';
+    label = 'Đang chơi';
+  } else if (['BAO_TRI', 'MAINTENANCE'].includes(rawStatus)) {
+    stateClass = 'maintenance';
+    label = 'Bảo trì';
+  } else if (['HONG', 'BROKEN', 'ERROR'].includes(rawStatus)) {
+    stateClass = 'maintenance';
+    label = 'Hỏng';
+  } else if (['PAUSED', 'TAM_DUNG'].includes(rawStatus)) {
+    stateClass = 'paused';
+    label = 'Tạm dừng';
   }
 
-  if (['BAO_TRI', 'MAINTENANCE'].includes(rawStatus)) {
-    return { id, displayName, stateClass: 'maintenance', label: 'Bảo trì', note };
-  }
-
-  if (['HONG', 'BROKEN', 'ERROR'].includes(rawStatus)) {
-    return { id, displayName, stateClass: 'maintenance', label: 'Hỏng', note };
-  }
-
-  if (['PAUSED', 'TAM_DUNG'].includes(rawStatus)) {
-    return { id, displayName, stateClass: 'paused', label: 'Tạm dừng', note };
-  }
-
-  return { id, displayName, stateClass: 'vacant', label: 'Trống', note };
+  const sessionId = machine.luotChoiId ?? machine.luotchoiId ?? null;
+  return {
+    ...machine,
+    id,
+    displayName,
+    tenMay: displayName,
+    tenmay: displayName,
+    tinhTrang: rawStatus,
+    tinhtrang: rawStatus,
+    ghiChu: note,
+    ghichu: note,
+    luotChoiId: sessionId,
+    luotchoiId: sessionId,
+    stateClass,
+    label,
+    note
+  };
 }
 
 function renderMachineCards(machines) {
@@ -2128,6 +2067,227 @@ function renderMachineCards(machines) {
   const selected = normalized.find(m => m.id === machineState.selectedId) || normalized[0];
   machineState.selectedId = selected.id;
   renderMachineDetails(selected);
+}
+
+async function loadServicesFromBackend() {
+  if (isDemoMode()) {
+    serviceState.services = DEMO_SERVICES.slice();
+    serviceState.filtered = DEMO_SERVICES.slice();
+    renderServiceCatalog();
+    return;
+  }
+
+  try {
+    const response = await fetch(`${API_BASE}/services`, {
+      headers: { 'Accept': 'application/json' },
+      credentials: 'include'
+    });
+
+    if (!response.ok) {
+      throw new Error(`Backend trả về HTTP ${response.status}`);
+    }
+
+    const data = await response.json();
+    serviceState.services = Array.isArray(data) ? data : [];
+    serviceState.filtered = serviceState.services.slice();
+    renderServiceCatalog();
+  } catch (error) {
+    console.warn('Không tải được danh sách dịch vụ từ backend.', error);
+    serviceState.services = [];
+    serviceState.filtered = [];
+    renderServiceCatalog();
+  }
+}
+
+function normalizeService(service) {
+  const id = Number(service.id);
+  const name = service.tenDichVu || service.tendichvu || `Dịch vụ ${id}`;
+  const price = Number(service.donGia ?? service.dongia ?? 0);
+  const rawType = String(service.loai || '').trim().toUpperCase();
+  let category = 'KHAC';
+  if (['DO_AN', 'FOOD', 'AN'].includes(rawType)) category = 'DO_AN';
+  else if (['DO_UONG', 'NUOC', 'DRINK'].includes(rawType)) category = 'DO_UONG';
+  return {
+    id,
+    name,
+    price,
+    category,
+    rawType,
+    statusLabel: service.trangThai || 'Đang bán'
+  };
+}
+
+function openServiceCatalog() {
+  const selectedMachine = machineState.machines.find(item => Number(item.id) === Number(machineState.selectedId));
+  if (!selectedMachine) {
+    alert('Hãy chọn một máy trước.');
+    return;
+  }
+
+  const status = String(selectedMachine.tinhtrang || selectedMachine.tinhTrang || '').trim().toUpperCase();
+  if (!['DANG_CHOI', 'DANG_SU_DUNG', 'IN_USE', 'BUSY'].includes(status)) {
+    alert('Máy phải đang có lượt chơi thì mới gọi được đồ ăn.');
+    return;
+  }
+
+  serviceState.selectedMachineId = Number(selectedMachine.id);
+  serviceState.selectedSessionId = Number(selectedMachine.luotchoiId || selectedMachine.luotChoiId || 0) || null;
+  if (!serviceState.selectedSessionId) {
+    alert('Không tìm thấy lượt chơi đang hoạt động của máy này.');
+    return;
+  }
+
+  const modal = document.getElementById('service-modal');
+  const subtitle = document.getElementById('service-modal-subtitle');
+  if (subtitle) {
+    subtitle.textContent = `${selectedMachine.tenmay || selectedMachine.tenMay || `PS ${selectedMachine.id}`} • Lượt chơi #${serviceState.selectedSessionId}`;
+  }
+  renderServiceCatalog();
+  if (modal) modal.style.display = 'flex';
+}
+
+function closeServiceModal() {
+  const modal = document.getElementById('service-modal');
+  if (modal) modal.style.display = 'none';
+  serviceState.selectedMachineId = null;
+  serviceState.selectedSessionId = null;
+}
+
+function setServiceFilter(filter) {
+  serviceState.filter = filter || 'ALL';
+  document.querySelectorAll('.filter-service-btn').forEach(btn => {
+    const active = btn.dataset.filter === serviceState.filter;
+    btn.classList.toggle('btn-primary', active);
+    btn.classList.toggle('btn-ghost', !active);
+    if (active) {
+      btn.style.background = 'var(--accent-blue)';
+      btn.style.color = 'white';
+      btn.style.borderColor = 'var(--accent-blue)';
+    } else {
+      btn.style.background = 'transparent';
+      btn.style.color = 'var(--text-secondary)';
+      btn.style.borderColor = 'var(--border-color)';
+    }
+  });
+  renderServiceCatalog();
+}
+
+function renderServiceCatalog() {
+  const grid = document.getElementById('service-grid');
+  const list = document.getElementById('service-order-list');
+  const query = (document.getElementById('service-search-input')?.value || '').trim().toLowerCase();
+  const normalized = serviceState.services.map(normalizeService).filter(service => {
+    const typeOk = serviceState.filter === 'ALL' || service.category === serviceState.filter;
+    const textOk = !query || service.name.toLowerCase().includes(query) || service.category.toLowerCase().includes(query) || service.rawType.toLowerCase().includes(query);
+    return typeOk && textOk;
+  });
+
+  serviceState.filtered = normalized;
+
+  if (grid) {
+    grid.innerHTML = normalized.length
+      ? normalized.map(service => `
+        <div class="service-card" data-service-id="${service.id}">
+          <div class="service-emoji">${service.category === 'DO_AN' ? '🍜' : service.category === 'DO_UONG' ? '🥤' : '🍿'}</div>
+          <div class="service-name">${escapeHtml(service.name)}</div>
+          <div class="service-price">${service.price.toLocaleString('vi-VN')}đ</div>
+          <div class="service-category">${service.category === 'DO_AN' ? 'Đồ ăn' : service.category === 'DO_UONG' ? 'Đồ uống' : 'Khác'}</div>
+          <button class="btn btn-primary" style="margin-top:10px;" onclick="openServiceModalForMachine(${serviceState.selectedMachineId || 0}); setTimeout(() => selectServiceAndFocus(${service.id}), 0);">Gọi món</button>
+        </div>
+      `).join('')
+      : '<div class="stat-card" style="grid-column:1/-1;text-align:center;padding:24px;">Không có dịch vụ nào từ backend.</div>';
+  }
+
+  if (list) {
+    list.innerHTML = normalized.length
+      ? normalized.map(service => {
+          const qty = serviceState.qtyById[service.id] || 0;
+          return `
+            <div style="display:flex;align-items:center;gap:12px;padding:12px;border:1px solid var(--border-color);border-radius:var(--radius-sm);background:var(--bg-card);margin-bottom:10px;">
+              <div style="font-size:24px;flex-shrink:0;">${service.category === 'DO_AN' ? '🍜' : service.category === 'DO_UONG' ? '🥤' : '🍿'}</div>
+              <div style="flex:1;min-width:0;">
+                <div style="font-weight:700;">${escapeHtml(service.name)}</div>
+                <div style="font-size:12px;color:var(--text-secondary);">${service.price.toLocaleString('vi-VN')}đ • ${service.category === 'DO_AN' ? 'Đồ ăn' : service.category === 'DO_UONG' ? 'Đồ uống' : 'Khác'}</div>
+              </div>
+              <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
+                <button class="btn btn-ghost" style="padding:6px 10px;" onclick="changeServiceQty(${service.id}, -1)">-</button>
+                <input id="service-qty-${service.id}" type="number" min="0" max="99" value="${qty}" onchange="syncServiceQty(${service.id})" style="width:58px;padding:8px;border:1px solid var(--border-color);border-radius:var(--radius-sm);background:var(--bg-secondary);color:var(--text-primary);text-align:center;">
+                <button class="btn btn-ghost" style="padding:6px 10px;" onclick="changeServiceQty(${service.id}, 1)">+</button>
+                <button class="btn btn-primary" onclick="submitServiceOrder(${service.id})" ${qty <= 0 ? 'disabled' : ''}>Gọi</button>
+              </div>
+            </div>
+          `;
+        }).join('')
+      : '<div style="padding:36px;text-align:center;color:var(--text-muted);">Không tìm thấy dịch vụ phù hợp.</div>';
+  }
+}
+
+function openServiceModalForMachine(machineId) {
+  if (machineId) {
+    machineState.selectedId = Number(machineId);
+  }
+  openServiceCatalog();
+}
+
+function selectServiceAndFocus(serviceId) {
+  const input = document.getElementById(`service-qty-${serviceId}`);
+  if (input) input.focus();
+}
+
+function changeServiceQty(serviceId, delta) {
+  const input = document.getElementById(`service-qty-${serviceId}`);
+  const current = parseInt(input?.value || '0', 10) || 0;
+  const next = Math.max(0, Math.min(99, current + delta));
+  serviceState.qtyById[serviceId] = next;
+  if (input) input.value = String(next);
+  renderServiceCatalog();
+}
+
+function syncServiceQty(serviceId) {
+  const input = document.getElementById(`service-qty-${serviceId}`);
+  const next = Math.max(0, Math.min(99, parseInt(input?.value || '0', 10) || 0));
+  serviceState.qtyById[serviceId] = next;
+  renderServiceCatalog();
+}
+
+async function submitServiceOrder(serviceId) {
+  const qty = Math.max(0, parseInt(serviceState.qtyById[serviceId] || '0', 10) || 0);
+  if (qty <= 0) return;
+  if (!serviceState.selectedMachineId || !serviceState.selectedSessionId) {
+    alert('Không tìm thấy lượt chơi đang hoạt động.');
+    return;
+  }
+
+  const form = new URLSearchParams();
+  form.set('machineId', String(serviceState.selectedMachineId));
+  form.set('serviceId', String(serviceId));
+  form.set('quantity', String(qty));
+
+  try {
+    const response = await fetch(`${API_BASE}/services`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
+        'Accept': 'application/json'
+      },
+      body: form.toString(),
+      credentials: 'include'
+    });
+
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok || payload.success === false) {
+      throw new Error(payload.message || `HTTP ${response.status}`);
+    }
+
+    serviceState.qtyById[serviceId] = 0;
+    const selectedMachine = machineState.machines.find(item => Number(item.id) === Number(serviceState.selectedMachineId));
+    alert(payload.message || `Đã gọi món cho ${selectedMachine?.tenmay || selectedMachine?.tenMay || 'máy'}`);
+    renderServiceCatalog();
+    await loadMachinesFromBackend();
+  } catch (error) {
+    console.error('Gọi dịch vụ thất bại', error);
+    alert(error.message || 'Gọi dịch vụ thất bại');
+  }
 }
 
 function updateMachineStats(total, inUse, vacant, maintenance, normalized) {
@@ -2202,26 +2362,32 @@ function updateMachineStats(total, inUse, vacant, maintenance, normalized) {
    if (header) header.textContent = `Chi tiết ${machine.displayName}`;
    const badgeClass = machine.stateClass === 'in-use' ? 'badge-green' : machine.stateClass === 'maintenance' ? 'badge-red' : machine.stateClass === 'paused' ? 'badge-amber' : 'badge-blue';
 
-   // Find full machine data from machineState.machines
-   const fullMachine = machineState.machines.find(m => Number(m.id) === Number(machine.id)) || {};
+   const rawMachine = machineState.machines.find(m => Number(m.id) === Number(machine.id)) || {};
+   const fullMachine = normalizeMachine({ ...machine, ...rawMachine });
+   const sessionId = fullMachine.luotchoiId ?? fullMachine.luotChoiId;
+   const hourlyRate = Number(fullMachine.donGiaGio ?? fullMachine.dongiaGio ?? 30000) || 30000;
+   const startRaw = fullMachine.thoiGianBatDau ?? fullMachine.thoigianbatdau;
+   const startTime = startRaw ? new Date(startRaw) : null;
+   const hasValidStart = startTime instanceof Date && !Number.isNaN(startTime.getTime());
 
    let sessionHtml = '';
-   if (machine.stateClass === 'in-use' && fullMachine.luotchoiId) {
+   if (machine.stateClass === 'in-use' && sessionId) {
      // Machine is in use, show session info
-     const startTime = new Date(fullMachine.thoiGianBatDau);
-     const minutesElapsed = Math.max(0, Math.floor((Date.now() - startTime.getTime()) / 60000));
-     const estimatedCost = fullMachine.estimatedCost || 0;
+     const minutesElapsed = hasValidStart
+       ? Math.max(0, Math.floor((Date.now() - startTime.getTime()) / 60000))
+       : Math.max(0, Number(fullMachine.minutesElapsed ?? fullMachine.minuteselapsed ?? 0) || 0);
+     const estimatedCost = Number(fullMachine.estimatedCost ?? fullMachine.tienChoi ?? (hourlyRate * (minutesElapsed / 60.0))) || 0;
 
      sessionHtml = `
        <div class="detail-section">
          <h4>Thông tin lượt chơi</h4>
          <div class="detail-row">
            <span class="label">Mã lượt chơi</span>
-           <span class="value" style="font-family:var(--mono);">LC-${fullMachine.luotchoiId}</span>
+           <span class="value" style="font-family:var(--mono);">LC-${sessionId}</span>
          </div>
          <div class="detail-row">
            <span class="label">Bắt đầu lúc</span>
-           <span class="value">${startTime.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</span>
+           <span class="value">${hasValidStart ? startTime.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : 'Chưa có dữ liệu'}</span>
          </div>
          <div class="detail-row">
            <span class="label">Thời gian chơi</span>
@@ -2231,7 +2397,7 @@ function updateMachineStats(total, inUse, vacant, maintenance, normalized) {
          </div>
          <div class="detail-row">
            <span class="label">Đơn giá</span>
-           <span class="value" style="font-family:var(--mono);">${(fullMachine.donGiaGio || 30000).toLocaleString('vi-VN')}đ/h</span>
+           <span class="value" style="font-family:var(--mono);">${hourlyRate.toLocaleString('vi-VN')}đ/h</span>
          </div>
          <div class="detail-row" style="font-size:15px;font-weight:700;padding:8px 0;border-top:1px solid var(--border-color);margin-top:8px;color:var(--accent-amber);">
            <span class="label">Ước tính tiền</span>
@@ -2244,9 +2410,9 @@ function updateMachineStats(total, inUse, vacant, maintenance, normalized) {
      `;
 
      // Start update interval for this machine
-     machineState.timeIntervals[machine.id] = setInterval(() => {
+     if (hasValidStart) machineState.timeIntervals[machine.id] = setInterval(() => {
        const elapsed = Math.max(0, Math.floor((Date.now() - startTime.getTime()) / 60000));
-       const cost = fullMachine.donGiaGio * (elapsed / 60.0);
+       const cost = hourlyRate * (elapsed / 60.0);
 
        const timeEl = document.getElementById(`elapsed-time-${machine.id}`);
        const costEl = document.getElementById(`estimated-cost-${machine.id}`);
@@ -2295,6 +2461,10 @@ function updateMachineStats(total, inUse, vacant, maintenance, normalized) {
 function renderMachineFooter(machine) {
   if (machine.stateClass === 'in-use') {
     return `
+      <button class="btn btn-success w-full" style="justify-content:center;padding:12px;margin-bottom:8px;" onclick="openServiceModalForMachine(${machine.id})">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M9 11l3 3L22 4"/><path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        Gọi dịch vụ
+      </button>
       <button class="btn btn-warning w-full" style="justify-content:center;padding:12px;" onclick="performMachineAction('close', ${machine.id})">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
         Đóng máy
@@ -2346,7 +2516,7 @@ function renderMachineFooter(machine) {
          'Accept': 'application/json'
        },
        body: form.toString(),
-       credentials: 'same-origin'
+       credentials: 'include'
      });
 
      const payload = await response.json().catch(() => ({}));
@@ -2358,11 +2528,12 @@ function renderMachineFooter(machine) {
 
      if (action === 'close') {
        // Show payment modal
-       showPaymentModal(selectedMachine, payload.totalHoursMoney);
+       showPaymentModal(selectedMachine, payload);
      } else {
        // Open machine - just show success
        alert(payload.message || 'Đã mở máy');
        await loadMachinesFromBackend();
+              await loadServicesFromBackend();
      }
    } catch (error) {
      console.error('Machine action failed', error);
@@ -2372,11 +2543,23 @@ function renderMachineFooter(machine) {
    }
  }
 
- function showPaymentModal(machine, totalCost) {
+ function showPaymentModal(machine, paymentPayload) {
    const modal = document.getElementById('payment-modal');
    const content = document.getElementById('payment-content');
 
-   const machineDisplayName = machine.tenmay || machine.tenMay || `PS ${machine.id}`;
+   const payment = typeof paymentPayload === 'object' && paymentPayload !== null
+     ? paymentPayload
+     : { totalHoursMoney: paymentPayload };
+   const normalizedMachine = normalizeMachine(machine || {});
+   const luotChoiId = payment.luotChoiId ?? payment.luotchoiId ?? normalizedMachine.luotChoiId ?? normalizedMachine.luotchoiId;
+   const hoaDonId = payment.hoaDonId ?? payment.hoadonId ?? null;
+   const playCost = Number(payment.tienChoi ?? payment.totalHoursMoney ?? normalizedMachine.estimatedCost ?? 0) || 0;
+   const serviceCost = Number(payment.tienDichVu ?? normalizedMachine.tienDichVu ?? 0) || 0;
+   const discount = Number(payment.tienKhuyenMai ?? 0) || 0;
+   const totalCost = Number(payment.tongTien ?? (playCost + serviceCost - discount)) || 0;
+   const minutesElapsed = Math.max(0, Number(payment.minutesElapsed ?? normalizedMachine.minutesElapsed ?? 0) || 0);
+   const hourlyRate = Number(payment.donGiaGio ?? normalizedMachine.donGiaGio ?? 30000) || 30000;
+   const machineDisplayName = normalizedMachine.displayName || `PS ${normalizedMachine.id}`;
 
    content.innerHTML = `
      <div style="display:flex;justify-content:space-between;margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--border-light);">
@@ -2384,31 +2567,35 @@ function renderMachineFooter(machine) {
        <span class="value" style="font-weight:600;">${escapeHtml(machineDisplayName)}</span>
      </div>
      <div style="display:flex;justify-content:space-between;margin-bottom:12px;">
+       <span class="label">Mã lượt chơi</span>
+       <span class="value" style="font-family:var(--mono);">${luotChoiId ? `LC-${luotChoiId}` : 'Chưa có dữ liệu'}</span>
+     </div>
+     <div style="display:flex;justify-content:space-between;margin-bottom:12px;">
        <span class="label">Thời gian chơi</span>
-       <span class="value" style="font-family:var(--mono);" id="payment-time"></span>
+       <span class="value" style="font-family:var(--mono);">${formatDuration(minutesElapsed)}</span>
      </div>
      <div style="display:flex;justify-content:space-between;margin-bottom:12px;">
        <span class="label">Đơn giá</span>
-       <span class="value" style="font-family:var(--mono);">30.000đ/h</span>
+       <span class="value" style="font-family:var(--mono);">${hourlyRate.toLocaleString('vi-VN')}đ/h</span>
      </div>
      <div style="display:flex;justify-content:space-between;margin-bottom:12px;padding:12px;background:rgba(59,130,246,0.15);border-radius:var(--radius-sm);">
        <span class="label" style="font-weight:600;">Tổng tiền chơi</span>
-       <span class="value" style="font-weight:700;color:var(--accent-blue);font-family:var(--mono);" id="payment-total">
-         ${(totalCost || 0).toLocaleString('vi-VN', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}đ
+       <span class="value" style="font-weight:700;color:var(--accent-blue);font-family:var(--mono);font-size:15px;" id="payment-total">
+         ${playCost.toLocaleString('vi-VN', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}đ
        </span>
      </div>
      <div style="display:flex;justify-content:space-between;margin-bottom:12px;">
        <span class="label">Dịch vụ khác</span>
-       <span class="value" style="font-family:var(--mono);">0đ</span>
+       <span class="value" style="font-family:var(--mono);">${serviceCost.toLocaleString('vi-VN', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}đ</span>
      </div>
      <div style="display:flex;justify-content:space-between;margin-bottom:12px;">
        <span class="label">Khuyến mãi</span>
-       <span class="value" style="color:var(--accent-emerald);font-family:var(--mono);">-0đ</span>
+       <span class="value" style="color:var(--accent-emerald);font-family:var(--mono);">-${discount.toLocaleString('vi-VN', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}đ</span>
      </div>
      <div style="display:flex;justify-content:space-between;padding:12px;background:rgba(139,92,246,0.15);border-radius:var(--radius-sm);border:1px solid var(--border-light);">
        <span class="label" style="font-weight:700;font-size:15px;">Tổng cộng</span>
        <span class="value" style="font-weight:800;color:var(--accent-purple);font-family:var(--mono);font-size:15px;" id="payment-final">
-         ${(totalCost || 0).toLocaleString('vi-VN', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}đ
+         ${totalCost.toLocaleString('vi-VN', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}đ
        </span>
      </div>
    `;
@@ -2419,8 +2606,10 @@ function renderMachineFooter(machine) {
 
    // Store for confirmation
    window.pendingPayment = {
-     machineId: machine.id,
-     totalCost: totalCost,
+     machineId: normalizedMachine.id,
+     luotChoiId,
+     hoaDonId,
+     totalCost,
      machineName: machineDisplayName
    };
  }
@@ -2437,12 +2626,37 @@ function renderMachineFooter(machine) {
    if (!window.pendingPayment) return;
 
    try {
-     alert(`💰 Thanh toán thành công: ${window.pendingPayment.totalCost.toLocaleString('vi-VN', { minimumFractionDigits: 0 })}đ\n\nMáy ${window.pendingPayment.machineName} đã sẵn sàng phục vụ khách hàng tiếp theo.`);
+     if (!window.pendingPayment.luotChoiId) {
+       throw new Error('Không tìm thấy mã lượt chơi để thanh toán.');
+     }
+
+     const form = new URLSearchParams();
+     form.set('action', 'checkout');
+     form.set('luotChoiId', String(window.pendingPayment.luotChoiId));
+
+     const response = await fetch(`${APP_BASE}/hoadon`, {
+       method: 'POST',
+       headers: {
+         'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
+         'Accept': 'application/json'
+       },
+       body: form.toString(),
+       credentials: 'include'
+     });
+
+     const payload = await response.json().catch(() => ({}));
+     if (!response.ok || payload.success === false) {
+       throw new Error(payload.message || `HTTP ${response.status}`);
+     }
+
+     const paidTotal = Number(payload.tongTien ?? window.pendingPayment.totalCost ?? 0) || 0;
+     alert(`💰 Thanh toán thành công: ${paidTotal.toLocaleString('vi-VN', { minimumFractionDigits: 0 })}đ\n\nMáy ${window.pendingPayment.machineName} đã sẵn sàng phục vụ khách hàng tiếp theo.`);
      closePaymentModal();
      await loadMachinesFromBackend();
+     await loadServicesFromBackend();
    } catch (error) {
      console.error('Payment confirmation failed', error);
-     alert('Xác nhận thanh toán thất bại');
+     alert(error.message || 'Xác nhận thanh toán thất bại');
    }
  }
 
@@ -2476,14 +2690,20 @@ function togglePanel() {
 
 async function loadMachinesFromBackend() {
   const headerDescription = document.querySelector('#page-machines .header-left p');
+
+  if (isDemoMode()) {
+    machineState.machines = DEMO_MACHINES.slice();
+    machineState.selectedId = machineState.selectedId || DEMO_MACHINES[0].id;
+    renderMachineCards(machineState.machines);
+    if (headerDescription) headerDescription.textContent = 'Dang chay che do demo';
+    return;
+  }
+
   try {
-    if (headerDescription) {
-      headerDescription.textContent = 'Đang đồng bộ dữ liệu máy từ backend...';
-    }
 
     const response = await fetch(`${API_BASE}/machines`, {
       headers: { 'Accept': 'application/json' },
-      credentials: 'same-origin'
+      credentials: 'include'
     });
 
     if (!response.ok) {
@@ -2539,6 +2759,8 @@ function handleHash() {
 handleHash();
 window.addEventListener('hashchange', handleHash);
 
+loadServicesFromBackend();
+
 document.querySelectorAll('.tab-btn').forEach(btn => {
   btn.addEventListener('click', function() {
     this.parentElement.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -2592,7 +2814,7 @@ document.querySelectorAll('.filter-pill').forEach(pill => {
          'Accept': 'application/json'
        },
        body: form.toString(),
-       credentials: 'same-origin'
+       credentials: 'include'
      });
 
      const payload = await response.json().catch(() => ({}));

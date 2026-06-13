@@ -12,11 +12,19 @@ import java.util.List;
 public class ChiTietHoaDonDAO {
     public boolean create(int hoaDonId, int dichVuId, String tenDichVu, int soLuong, 
                          double donGia, double thanhTien) {
+        try (Connection conn = DBConnection.getConnection()) {
+            return create(conn, hoaDonId, dichVuId, tenDichVu, soLuong, donGia, thanhTien);
+        } catch (Exception e) {
+            throw new RuntimeException("Cannot create invoice detail", e);
+        }
+    }
+
+    public boolean create(Connection conn, int hoaDonId, int dichVuId, String tenDichVu, int soLuong,
+                         double donGia, double thanhTien) {
         String sql = "INSERT INTO chitiet_hoadon (hoadonid, dichvuid, tendichvu, soluong, dongia, thanhTien) " +
                 "VALUES (?, ?, ?, ?, ?, ?)";
 
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, hoaDonId);
             ps.setInt(2, dichVuId);
             ps.setString(3, tenDichVu);

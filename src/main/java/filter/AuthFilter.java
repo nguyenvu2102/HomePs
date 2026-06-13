@@ -26,6 +26,13 @@ public class AuthFilter implements Filter {
         HttpServletRequest httpRequest = (HttpServletRequest) request;
         HttpServletResponse httpResponse = (HttpServletResponse) response;
 
+        addCorsHeaders(httpRequest, httpResponse);
+
+        if ("OPTIONS".equalsIgnoreCase(httpRequest.getMethod())) {
+            httpResponse.setStatus(HttpServletResponse.SC_NO_CONTENT);
+            return;
+        }
+
         if (!requiresAuthentication(httpRequest)) {
             chain.doFilter(request, response);
             return;
@@ -40,6 +47,18 @@ public class AuthFilter implements Filter {
         httpResponse.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         httpResponse.setContentType("application/json;charset=UTF-8");
         httpResponse.getWriter().write("{\"success\":false,\"message\":\"Unauthorized\"}");
+    }
+
+    private static void addCorsHeaders(HttpServletRequest request, HttpServletResponse response) {
+        String origin = request.getHeader("Origin");
+        if (origin != null && !origin.isBlank()) {
+            response.setHeader("Access-Control-Allow-Origin", origin);
+            response.setHeader("Vary", "Origin");
+        }
+        response.setHeader("Access-Control-Allow-Credentials", "true");
+        response.setHeader("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
+        response.setHeader("Access-Control-Allow-Headers", "Content-Type, Accept, X-Requested-With, Authorization");
+        response.setHeader("Access-Control-Max-Age", "3600");
     }
 
     private static boolean requiresAuthentication(HttpServletRequest request) {

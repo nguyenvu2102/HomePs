@@ -16,7 +16,9 @@ import model.LuotChoi;
 import model.SuKien;
 
 import java.io.IOException;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -130,7 +132,7 @@ public class HoaDonController extends HttpServlet {
             double tienKhuyenMai = tinhKhuyenMai(luotChoiId, hoaDon.getTienChoi(), hoaDon.getTienDichVu());
             double tongTienFinal = hoaDon.getTienChoi() + hoaDon.getTienDichVu() - tienKhuyenMai;
 
-            hoaDonDAO.updateStatus(hoaDon.getId(), "DA_THANH_TOAN");
+            hoaDonDAO.completePayment(hoaDon.getId(), tienKhuyenMai, tongTienFinal);
             write(response, HttpServletResponse.SC_OK, Map.of(
                     "success", true,
                     "message", "Payment completed.",
@@ -174,13 +176,51 @@ public class HoaDonController extends HttpServlet {
             double khuyenMai = 0;
 
             for (SuKien sk : suKienHoatDong) {
-                khuyenMai += tongChiPhi * (sk.getPhanTramGiamGia() / 100.0);
+                if (appliesTo(sk, thoiGianChoi)) {
+                    khuyenMai += tongChiPhi * (sk.getPhanTramGiamGia() / 100.0);
+                }
             }
 
             return Math.min(khuyenMai, tongChiPhi);
         } catch (Exception e) {
             return 0;
         }
+    }
+
+    private boolean appliesTo(SuKien suKien, LocalDateTime time) {
+        String ngayApDung = text(suKien.getNgayApDung());
+        if (!ngayApDung.isEmpty()) {
+            try {
+                if (!LocalDate.parse(ngayApDung).equals(time.toLocalDate())) {
+                    return false;
+                }
+            } catch (Exception ignored) {
+                // Keep the event usable if legacy data has a free-text date rule.
+            }
+        }
+
+        String gioApDung = text(suKien.getGioApDung());
+        if (!gioApDung.isEmpty() && gioApDung.contains("-")) {
+            try {
+                String[] parts = gioApDung.split("-", 2);
+                LocalTime start = LocalTime.parse(parts[0].trim());
+                LocalTime end = LocalTime.parse(parts[1].trim());
+                LocalTime current = time.toLocalTime();
+
+                if (end.isBefore(start)) {
+                    return !current.isBefore(start) || !current.isAfter(end);
+                }
+                return !current.isBefore(start) && !current.isAfter(end);
+            } catch (Exception ignored) {
+                // Keep the event usable if legacy data has a free-text time rule.
+            }
+        }
+
+        return true;
+    }
+
+    private static String text(String value) {
+        return value == null ? "" : value.trim();
     }
 
     private static int parseInt(String value, int defaultValue) {

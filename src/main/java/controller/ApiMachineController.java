@@ -1,6 +1,7 @@
 package controller;
 
 import com.google.gson.Gson;
+import dao.ChiTietHoaDonDAO;
 import dao.HoaDonDAO;
 import dao.LuotChoiDAO;
 import dao.MayPSDAO;
@@ -8,6 +9,8 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import model.ChiTietHoaDon;
+import model.HoaDon;
 import model.LuotChoi;
 import model.MayPS;
 import model.NhanVien;
@@ -16,8 +19,6 @@ import utils.DBConnection;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.time.Duration;
-import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -28,6 +29,7 @@ public class ApiMachineController extends HttpServlet {
     private final MayPSDAO mayPSDAO = new MayPSDAO();
     private final LuotChoiDAO luotChoiDAO = new LuotChoiDAO();
     private final HoaDonDAO hoaDonDAO = new HoaDonDAO();
+    private final ChiTietHoaDonDAO chiTietHoaDonDAO = new ChiTietHoaDonDAO();
     private final Gson gson = new Gson();
 
     @Override
@@ -45,12 +47,12 @@ public class ApiMachineController extends HttpServlet {
             item.put("tinhtrang", machine.getTinhTrang());
             item.put("ghichu", machine.getGhiChu());
 
-            Optional<LuotChoi> activeSession = luotChoiDAO.findActiveByMayId(machine.getId());
-            if (activeSession.isPresent()) {
-                LuotChoi session = activeSession.get();
-                long minutesElapsed = Math.max(0, Duration.between(
+            Optional<LuotChoi> activeSessionOpt = luotChoiDAO.findActiveByMayId(machine.getId());
+            if (activeSessionOpt.isPresent()) {
+                LuotChoi session = activeSessionOpt.get();
+                long minutesElapsed = Math.max(0, java.time.Duration.between(
                         session.getThoiGianBatDau().toInstant(),
-                        Instant.now()
+                        java.time.Instant.now()
                 ).toMinutes());
 
                 double estimatedCost = session.getDonGiaGio() * (minutesElapsed / 60.0);
@@ -60,6 +62,26 @@ public class ApiMachineController extends HttpServlet {
                 item.put("minutesElapsed", minutesElapsed);
                 item.put("estimatedCost", estimatedCost);
                 item.put("donGiaGio", session.getDonGiaGio());
+
+                // Lấy thông tin hóa đơn và dịch vụ đã gọi
+                Optional<HoaDon> hoaDonOpt = hoaDonDAO.findByLuotChoiId(session.getId());
+                if (hoaDonOpt.isPresent()) {
+                    HoaDon hoaDon = hoaDonOpt.get();
+                    List<ChiTietHoaDon> details = chiTietHoaDonDAO.getByHoaDonId(hoaDon.getId());
+                    item.put("dichVuDaGoi", details);
+                    item.put("tienDichVu", hoaDon.getTienDichVu());
+                } else {
+                    item.put("dichVuDaGoi", List.of());
+                    item.put("tienDichVu", 0);
+                }
+            } else {
+                item.put("luotchoiId", null);
+                item.put("thoiGianBatDau", null);
+                item.put("minutesElapsed", 0);
+                item.put("estimatedCost", 0);
+                item.put("donGiaGio", 0);
+                item.put("dichVuDaGoi", List.of());
+                item.put("tienDichVu", 0);
             }
 
             result.add(item);
@@ -209,73 +231,77 @@ public class ApiMachineController extends HttpServlet {
     }
 
     private void handleClose(HttpServletResponse response, MayPS machine) throws IOException {
-        Optional<LuotChoi> activeSessionOpt = luotChoiDAO.findActiveByMayId(machine.getId());
-        if (activeSessionOpt.isEmpty()) {
-            write(response, HttpServletResponse.SC_CONFLICT, Map.of(
-                    "success", false,
-                    "message", "Khong tim thay luot choi dang hoat dong"
-            ));
-            return;
-        }
-
-        LuotChoi activeSession = activeSessionOpt.get();
-        long minutesPlayed = Math.max(1, Duration.between(
-                activeSession.getThoiGianBatDau().toInstant(),
-                Instant.now()
-        ).toMinutes());
-
         try (Connection conn = DBConnection.getConnection()) {
             conn.setAutoCommit(false);
-            Optional<Double> totalOpt;
             try {
-                totalOpt = luotChoiDAO.ketThucLuotChoi(conn, machine.getId());
-                if (totalOpt.isEmpty()) {
-                    conn.rollback();
-                    write(response, HttpServletResponse.SC_CONFLICT, Map.of(
-                            "success", false,
-                            "message", "Khong tim thay luot choi dang hoat dong"
-                    ));
+                Optional<LuotChoi> activeSessionOpt = luotChoiDAO.findActiveByMayId(machine.getId());
+                if (activeSessionOpt.isEmpty()) {
+                    write(response, HttpServletResponse.SC_CONFLICT, Map.of("success", false, "message", "Máy chưa có lượt chơi đang hoạt động"));
                     return;
                 }
+                LuotChoi activeSession = activeSessionOpt.get();
+
+                // End the session and calculate playing time cost
+                double totalHoursMoney = luotChoiDAO.ketThucLuotChoi(conn, machine.getId()).orElse(0.0);
+
+                // Find or create an invoice
+                Optional<HoaDon> hoaDonOpt = hoaDonDAO.findByLuotChoiId(conn, activeSession.getId());
+                HoaDon hoaDon;
+                if (hoaDonOpt.isEmpty()) {
+                    hoaDonDAO.create(conn, activeSession.getId(), totalHoursMoney, 0, 0, totalHoursMoney);
+                    hoaDon = hoaDonDAO.findByLuotChoiId(conn, activeSession.getId()).orElseThrow(() -> new SQLException("Failed to create invoice"));
+                } else {
+                    hoaDon = hoaDonOpt.get();
+                }
+
+                // Update invoice with final costs
+                hoaDonDAO.updateTienChoi(conn, hoaDon.getId(), totalHoursMoney);
+                hoaDonDAO.updateTongTien(conn, hoaDon.getId());
+
+                double tienDichVu = hoaDon.getTienDichVu();
+                double tienKhuyenMai = hoaDon.getTienKhuyenMai();
+                double tongTien = Math.max(0, totalHoursMoney + tienDichVu - tienKhuyenMai);
+                long minutesElapsed = Math.max(1, java.time.Duration.between(
+                        activeSession.getThoiGianBatDau().toInstant(),
+                        java.time.Instant.now()
+                ).toMinutes());
 
                 boolean updated = mayPSDAO.updateTinhTrang(conn, machine.getId(), "BINH_THUONG");
                 if (!updated) {
                     conn.rollback();
-                    write(response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, Map.of(
-                            "success", false,
-                            "message", "Khong the dong may"
-                    ));
+                    write(response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, Map.of("success", false, "message", "Không thể đóng máy"));
                     return;
                 }
+
                 conn.commit();
+
+                Map<String, Object> payload = new java.util.HashMap<>();
+                payload.put("success", true);
+                payload.put("message", "Đã đóng máy");
+                payload.put("totalHoursMoney", totalHoursMoney);
+                payload.put("luotChoiId", activeSession.getId());
+                payload.put("luotchoiId", activeSession.getId());
+                payload.put("hoaDonId", hoaDon.getId());
+                payload.put("tienChoi", totalHoursMoney);
+                payload.put("tienDichVu", tienDichVu);
+                payload.put("tienKhuyenMai", tienKhuyenMai);
+                payload.put("tongTien", tongTien);
+                payload.put("minutesElapsed", minutesElapsed);
+                payload.put("donGiaGio", activeSession.getDonGiaGio());
+                payload.put("machine", mayPSDAO.findById(machine.getId()).orElse(machine));
+                write(response, HttpServletResponse.SC_OK, payload);
+
             } catch (Exception e) {
                 conn.rollback();
                 throw e;
             } finally {
                 conn.setAutoCommit(true);
             }
-
-            double totalHoursMoney = totalOpt.get();
-            if (hoaDonDAO.findByLuotChoiId(activeSession.getId()).isEmpty()) {
-                hoaDonDAO.create(activeSession.getId(), totalHoursMoney, 0d, 0d, totalHoursMoney);
-            }
-
-            write(response, HttpServletResponse.SC_OK, Map.of(
-                    "success", true,
-                    "message", "Da dong may",
-                    "luotchoiId", activeSession.getId(),
-                    "minutesPlayed", minutesPlayed,
-                    "donGiaGio", activeSession.getDonGiaGio(),
-                    "totalHoursMoney", totalHoursMoney,
-                    "machine", mayPSDAO.findById(machine.getId()).orElse(machine)
-            ));
         } catch (Exception e) {
-            write(response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, Map.of(
-                    "success", false,
-                    "message", "Khong the dong may: " + e.getMessage()
-            ));
+            write(response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, Map.of("success", false, "message", "Không thể đóng máy: " + e.getMessage()));
         }
     }
+
 
     private static boolean isMachineInUse(MayPS machine) {
         String status = valueOf(machine.getTinhTrang()).toUpperCase();

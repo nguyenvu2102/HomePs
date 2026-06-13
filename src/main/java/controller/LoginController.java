@@ -50,12 +50,20 @@ public class LoginController extends HttpServlet {
 
     private NhanVien authenticate(String username, String password) {
         if ("admin".equals(username) && "admin".equals(password)) {
-            return nhanVienDAO.findById(1).orElseGet(() -> buildFallbackUser(1, "admin", "ADMIN"));
+            return buildOrLoadUser(1, "admin", "ADMIN");
         }
         if ("staff".equals(username) && "staff".equals(password)) {
-            return nhanVienDAO.findById(2).orElseGet(() -> buildFallbackUser(2, "staff", "NHAN_VIEN"));
+            return buildOrLoadUser(2, "staff", "NHAN_VIEN");
         }
         return null;
+    }
+
+    private NhanVien buildOrLoadUser(int id, String name, String role) {
+        try {
+            return nhanVienDAO.findById(id).orElseGet(() -> buildFallbackUser(id, name, role));
+        } catch (Exception e) {
+            return buildFallbackUser(id, name, role);
+        }
     }
 
     private static NhanVien buildFallbackUser(int id, String name, String role) {

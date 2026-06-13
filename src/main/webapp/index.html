@@ -823,6 +823,52 @@ body {
   gap: 16px;
 }
 
+.management-grid {
+  display: grid;
+  grid-template-columns: minmax(280px, 360px) 1fr;
+  gap: 20px;
+  align-items: start;
+}
+
+.admin-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.table-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.inline-input {
+  min-width: 120px;
+  padding: 8px 10px;
+}
+
+.table-muted {
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+@media (max-width: 1180px) {
+  .stats-row,
+  .stats-grid-2,
+  .management-grid {
+    grid-template-columns: 1fr;
+  }
+  .header {
+    align-items: flex-start;
+    gap: 12px;
+    flex-direction: column;
+  }
+  .header-actions {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+}
+
 /* Screen label for design reference */
 .screen-label {
   position: fixed;
@@ -1268,6 +1314,252 @@ body {
       <div class="screen-label">UC20-UC25 — Thống kê doanh thu</div>
     </div>
 
+    <!-- ======================== -->
+    <!-- PAGE: HISTORY -->
+    <!-- ======================== -->
+    <div id="page-history" class="page" style="display:none;flex-direction:column;height:100%;">
+      <div class="header">
+        <div class="header-left">
+          <h2>Lịch sử sử dụng</h2>
+          <p>Tra cứu lượt chơi, máy sử dụng, nhân viên phụ trách và hóa đơn liên quan</p>
+        </div>
+        <div class="header-actions">
+          <select id="history-status-filter" class="form-select" style="width:180px;" onchange="loadHistoryFromBackend()">
+            <option value="ALL">Tất cả trạng thái</option>
+            <option value="DANG_CHOI">Đang chơi</option>
+            <option value="DA_KET_THUC">Đã kết thúc</option>
+            <option value="DA_THANH_TOAN">Đã thanh toán</option>
+            <option value="CHUA_THANH_TOAN">Chưa thanh toán</option>
+          </select>
+          <select id="history-machine-filter" class="form-select" style="width:160px;" onchange="loadHistoryFromBackend()">
+            <option value="">Tất cả máy</option>
+          </select>
+          <input id="history-date-filter" class="form-input" type="date" style="width:170px;" onchange="loadHistoryFromBackend()">
+          <button class="btn btn-ghost" onclick="loadHistoryFromBackend()">Làm mới</button>
+        </div>
+      </div>
+      <div class="content" style="flex:1;overflow-y:auto;">
+        <div class="stats-row">
+          <div class="stat-card blue">
+            <div class="stat-label">Tổng lượt chơi</div>
+            <div class="stat-value" id="history-total-sessions">0</div>
+            <div class="stat-change">Theo bộ lọc hiện tại</div>
+          </div>
+          <div class="stat-card green">
+            <div class="stat-label">Đã thanh toán</div>
+            <div class="stat-value" id="history-paid-sessions">0</div>
+            <div class="stat-change">Có hóa đơn hoàn tất</div>
+          </div>
+          <div class="stat-card amber">
+            <div class="stat-label">Thời lượng</div>
+            <div class="stat-value" id="history-total-duration">0m</div>
+            <div class="stat-change">Tổng thời gian sử dụng</div>
+          </div>
+          <div class="stat-card purple" style="--accent: var(--accent-purple);">
+            <div class="stat-label">Tổng tiền</div>
+            <div class="stat-value" id="history-total-revenue" style="font-size:24px;color:var(--accent-purple);">0đ</div>
+            <div class="stat-change">Từ lượt chơi và hóa đơn</div>
+          </div>
+        </div>
+
+        <div class="chart-container">
+          <div class="section-header">
+            <div class="chart-title">Danh sách lượt sử dụng</div>
+          </div>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Mã lượt</th>
+                <th>Máy</th>
+                <th>Nhân viên</th>
+                <th>Bắt đầu</th>
+                <th>Kết thúc</th>
+                <th>Thời lượng</th>
+                <th>Hóa đơn</th>
+                <th>Tổng tiền</th>
+                <th>Trạng thái</th>
+              </tr>
+            </thead>
+            <tbody id="history-table-body"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="screen-label">UC27-UC29 — Lịch sử sử dụng</div>
+    </div>
+
+    <!-- ======================== -->
+    <!-- PAGE: ADMIN -->
+    <!-- ======================== -->
+    <div id="page-admin" class="page" style="display:none;flex-direction:column;height:100%;">
+      <div class="header">
+        <div class="header-left">
+          <h2>Quản trị hệ thống</h2>
+          <p>Quản lý máy, nhân viên, dịch vụ và trạng thái vận hành</p>
+        </div>
+        <div class="header-actions">
+          <button class="btn btn-ghost" onclick="loadAdminFromBackend()">Làm mới</button>
+        </div>
+      </div>
+      <div class="content" style="flex:1;overflow-y:auto;">
+        <div class="stats-row">
+          <div class="stat-card blue">
+            <div class="stat-label">Tổng máy</div>
+            <div class="stat-value" id="admin-total-machines">0</div>
+            <div class="stat-change" id="admin-machine-breakdown"></div>
+          </div>
+          <div class="stat-card green">
+            <div class="stat-label">Nhân viên đang làm</div>
+            <div class="stat-value" id="admin-active-employees">0</div>
+            <div class="stat-change">Tài khoản có thể vận hành</div>
+          </div>
+          <div class="stat-card amber">
+            <div class="stat-label">Dịch vụ</div>
+            <div class="stat-value" id="admin-service-count">0</div>
+            <div class="stat-change">Món đang có trong menu</div>
+          </div>
+          <div class="stat-card purple" style="--accent: var(--accent-purple);">
+            <div class="stat-label">Doanh thu hôm nay</div>
+            <div class="stat-value" id="admin-today-revenue" style="font-size:24px;color:var(--accent-purple);">0đ</div>
+            <div class="stat-change" id="admin-open-work"></div>
+          </div>
+        </div>
+
+        <div class="management-grid">
+          <div>
+            <form id="admin-machine-form" class="chart-container" onsubmit="submitAdminMachineForm(event)">
+              <div class="chart-title" style="margin-bottom:16px;">Thêm máy</div>
+              <div class="form-group">
+                <label class="form-label">Tên máy</label>
+                <input id="admin-new-machine-name" class="form-input" placeholder="VD: PS 21" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Trạng thái</label>
+                <select id="admin-new-machine-status" class="form-select">
+                  <option value="BINH_THUONG">Trống</option>
+                  <option value="BAO_TRI">Bảo trì</option>
+                  <option value="HONG">Hỏng</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Ghi chú</label>
+                <input id="admin-new-machine-note" class="form-input" placeholder="Khu vực, cấu hình hoặc tình trạng">
+              </div>
+              <button class="btn btn-primary w-full" type="submit" style="justify-content:center;">Thêm máy</button>
+            </form>
+
+            <form id="admin-employee-form" class="chart-container" onsubmit="submitAdminEmployeeForm(event)">
+              <div class="chart-title" style="margin-bottom:16px;">Thêm nhân viên</div>
+              <div class="form-group">
+                <label class="form-label">Tên nhân viên</label>
+                <input id="admin-new-employee-name" class="form-input" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Số điện thoại</label>
+                <input id="admin-new-employee-phone" class="form-input">
+              </div>
+              <div class="admin-form-grid">
+                <div class="form-group">
+                  <label class="form-label">Vai trò</label>
+                  <select id="admin-new-employee-role" class="form-select">
+                    <option value="NHAN_VIEN">Nhân viên</option>
+                    <option value="ADMIN">Admin</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Trạng thái</label>
+                  <select id="admin-new-employee-status" class="form-select">
+                    <option value="DANG_LAM">Đang làm</option>
+                    <option value="NGHI_VIEC">Nghỉ việc</option>
+                  </select>
+                </div>
+              </div>
+              <button class="btn btn-primary w-full" type="submit" style="justify-content:center;">Thêm nhân viên</button>
+            </form>
+
+            <form id="admin-service-form" class="chart-container" onsubmit="submitAdminServiceForm(event)">
+              <div class="chart-title" style="margin-bottom:16px;">Thêm dịch vụ</div>
+              <div class="form-group">
+                <label class="form-label">Tên dịch vụ</label>
+                <input id="admin-new-service-name" class="form-input" required>
+              </div>
+              <div class="admin-form-grid">
+                <div class="form-group">
+                  <label class="form-label">Đơn giá</label>
+                  <input id="admin-new-service-price" class="form-input" type="number" min="0" step="1000" required>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Loại</label>
+                  <select id="admin-new-service-type" class="form-select">
+                    <option value="DO_AN">Đồ ăn</option>
+                    <option value="NUOC">Nước</option>
+                    <option value="SNACK">Snack</option>
+                    <option value="KHAC">Khác</option>
+                  </select>
+                </div>
+              </div>
+              <button class="btn btn-primary w-full" type="submit" style="justify-content:center;">Thêm dịch vụ</button>
+            </form>
+          </div>
+
+          <div>
+            <div class="chart-container">
+              <div class="section-header">
+                <div class="chart-title">Danh sách máy</div>
+              </div>
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Máy</th>
+                    <th>Trạng thái</th>
+                    <th>Ghi chú</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody id="admin-machine-body"></tbody>
+              </table>
+            </div>
+
+            <div class="stats-grid-2">
+              <div class="chart-container">
+                <div class="section-header">
+                  <div class="chart-title">Nhân viên</div>
+                </div>
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>Tên</th>
+                      <th>Vai trò</th>
+                      <th>Trạng thái</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody id="admin-employee-body"></tbody>
+                </table>
+              </div>
+
+              <div class="chart-container">
+                <div class="section-header">
+                  <div class="chart-title">Dịch vụ</div>
+                </div>
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>Tên</th>
+                      <th>Giá</th>
+                      <th>Loại</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody id="admin-service-body"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="screen-label">UC30-UC34 — Quản trị hệ thống</div>
+    </div>
+
    </div>
  </div>
 
@@ -1291,6 +1583,8 @@ const appState = {
   invoices: [],
   events: [],
   stats: null,
+  history: null,
+  admin: null,
   eventFilter: 'ALL',
   selectedMachineId: null,
   timeIntervals: {}
@@ -1420,9 +1714,13 @@ function switchPage(pageId, navElement) {
     activeItem.classList.add('active');
   }
 
+  if (pageId === 'machines') loadMachinesFromBackend();
+  if (pageId === 'services') loadServicesFromBackend();
   if (pageId === 'invoices') loadInvoicesFromBackend();
   if (pageId === 'events') loadEventsFromBackend();
   if (pageId === 'stats') loadStatsFromBackend();
+  if (pageId === 'history') loadHistoryFromBackend();
+  if (pageId === 'admin') loadAdminFromBackend();
 }
 
 function formatCurrency(value) {
@@ -1824,6 +2122,7 @@ function statusBadge(status) {
     const raw = String(status || '').toUpperCase();
     if (raw === 'DA_THANH_TOAN') return '<span class="badge badge-green"><span class="badge-dot"></span>Đã thanh toán</span>';
     if (raw === 'CHUA_THANH_TOAN') return '<span class="badge badge-amber"><span class="badge-dot"></span>Chưa thanh toán</span>';
+    if (raw === 'CHUA_CO_HOA_DON') return '<span class="badge"><span class="badge-dot"></span>Chưa có hóa đơn</span>';
     return `<span class="badge badge-blue"><span class="badge-dot"></span>${escapeHtml(status || 'Không rõ')}</span>`;
 }
 
@@ -2122,6 +2421,393 @@ function renderStatsServiceTable(rows) {
         <td style="font-family:var(--mono);font-weight:700;color:var(--accent-amber);">${formatCurrency(row.doanhThu)}</td>
       </tr>
     `).join('');
+}
+
+function formatDuration(minutes) {
+    const total = Math.max(0, Number(minutes) || 0);
+    const hours = Math.floor(total / 60);
+    const mins = total % 60;
+    if (hours <= 0) return `${mins}m`;
+    return `${hours}h ${mins}m`;
+}
+
+function sessionStatusBadge(status) {
+    const raw = String(status || '').toUpperCase();
+    if (raw === 'DANG_CHOI') return '<span class="badge badge-green"><span class="badge-dot"></span>Đang chơi</span>';
+    if (raw === 'DA_KET_THUC') return '<span class="badge badge-blue"><span class="badge-dot"></span>Đã kết thúc</span>';
+    return `<span class="badge"><span class="badge-dot"></span>${escapeHtml(status || 'Không rõ')}</span>`;
+}
+
+function renderHistoryMachineFilter() {
+    const select = document.getElementById('history-machine-filter');
+    if (!select) return;
+    const current = select.value;
+    const machines = appState.machines || [];
+    select.innerHTML = '<option value="">Tất cả máy</option>' + machines.map(machine => {
+        const label = machine.displayName || machine.tenMay || machine.tenmay || `Máy ${machine.id}`;
+        return `<option value="${machine.id}">${escapeHtml(label)}</option>`;
+    }).join('');
+    if (current && machines.some(machine => String(machine.id) === String(current))) {
+        select.value = current;
+    }
+}
+
+async function loadHistoryFromBackend() {
+    if (!appState.machines || appState.machines.length === 0) {
+        await loadMachinesFromBackend();
+    }
+    renderHistoryMachineFilter();
+
+    const date = document.getElementById('history-date-filter')?.value || '';
+    const status = document.getElementById('history-status-filter')?.value || 'ALL';
+    const machineId = document.getElementById('history-machine-filter')?.value || '';
+    const params = new URLSearchParams();
+    if (date) params.set('date', date);
+    if (status && status !== 'ALL') params.set('status', status);
+    if (machineId) params.set('machineId', machineId);
+
+    try {
+        const response = await fetch(`${API_BASE}/history${params.toString() ? `?${params}` : ''}`);
+        const data = await response.json();
+        if (!response.ok || data.success === false) throw new Error(data.message || `Backend error: ${response.status}`);
+        appState.history = data;
+        renderHistory();
+    } catch (error) {
+        console.error('Failed to load history:', error);
+        const body = document.getElementById('history-table-body');
+        if (body) body.innerHTML = `<tr><td colspan="9" style="text-align:center;color:var(--accent-red);padding:24px;">${escapeHtml(error.message)}</td></tr>`;
+    }
+}
+
+function renderHistory() {
+    const data = appState.history || {};
+    const summary = data.summary || {};
+    const rows = data.history || [];
+
+    const totalEl = document.getElementById('history-total-sessions');
+    const paidEl = document.getElementById('history-paid-sessions');
+    const durationEl = document.getElementById('history-total-duration');
+    const revenueEl = document.getElementById('history-total-revenue');
+    if (totalEl) totalEl.textContent = summary.totalSessions || 0;
+    if (paidEl) paidEl.textContent = summary.paidSessions || 0;
+    if (durationEl) durationEl.textContent = formatDuration(summary.totalMinutes || 0);
+    if (revenueEl) revenueEl.textContent = formatCurrency(summary.totalRevenue || 0);
+
+    const body = document.getElementById('history-table-body');
+    if (!body) return;
+    if (rows.length === 0) {
+        body.innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--text-muted);padding:24px;">Chưa có lịch sử theo bộ lọc này.</td></tr>';
+        return;
+    }
+
+    body.innerHTML = rows.map(item => {
+        const invoiceId = item.hoaDonId || item.hoadonId;
+        const services = Array.isArray(item.chiTiet) && item.chiTiet.length
+            ? `<div class="table-muted">${item.chiTiet.map(detail => `${escapeHtml(detail.tenDichVu || detail.tendichvu)} x${detail.soLuong || detail.soluong}`).join(', ')}</div>`
+            : '';
+        return `
+          <tr>
+            <td style="font-family:var(--mono);font-weight:700;">LC-${item.luotChoiId || item.luotchoiId}</td>
+            <td>${escapeHtml(item.tenMay || `Máy ${item.mayId || ''}`)}</td>
+            <td>${escapeHtml(item.tenNhanVien || `NV ${item.nhanVienId || ''}`)}</td>
+            <td>${formatDateTime(item.thoiGianBatDau)}</td>
+            <td>${item.thoiGianKetThuc ? formatDateTime(item.thoiGianKetThuc) : '<span class="table-muted">Đang mở</span>'}</td>
+            <td style="font-family:var(--mono);">${formatDuration(item.durationMinutes)}</td>
+            <td>${invoiceId ? `<span style="font-family:var(--mono);font-weight:700;">HD-${invoiceId}</span>${services}` : '<span class="table-muted">Chưa có</span>'}</td>
+            <td style="font-family:var(--mono);font-weight:800;color:var(--accent-amber);">${formatCurrency(item.tongTien)}</td>
+            <td>${sessionStatusBadge(item.trangThaiLuotChoi)}<div style="margin-top:6px;">${statusBadge(item.trangThaiHoaDon)}</div></td>
+          </tr>
+        `;
+    }).join('');
+}
+
+function machineStatusLabel(status) {
+    const raw = String(status || '').toUpperCase();
+    if (raw === 'DANG_CHOI') return 'Đang chơi';
+    if (raw === 'BAO_TRI') return 'Bảo trì';
+    if (raw === 'HONG') return 'Hỏng';
+    return 'Trống';
+}
+
+function selectedAttr(value, current) {
+    return String(value) === String(current) ? 'selected' : '';
+}
+
+function machineStatusOptions(current) {
+    const raw = String(current || 'BINH_THUONG').toUpperCase();
+    const options = raw === 'DANG_CHOI'
+        ? [{ value: 'DANG_CHOI', label: 'Đang chơi' }]
+        : [
+            { value: 'BINH_THUONG', label: 'Trống' },
+            { value: 'BAO_TRI', label: 'Bảo trì' },
+            { value: 'HONG', label: 'Hỏng' }
+        ];
+    return options.map(option => `<option value="${option.value}" ${selectedAttr(option.value, raw)}>${option.label}</option>`).join('');
+}
+
+function serviceTypeOptions(current) {
+    const raw = String(current || 'KHAC').toUpperCase();
+    const options = [
+        { value: 'DO_AN', label: 'Đồ ăn' },
+        { value: 'NUOC', label: 'Nước' },
+        { value: 'SNACK', label: 'Snack' },
+        { value: 'KHAC', label: 'Khác' }
+    ];
+    return options.map(option => `<option value="${option.value}" ${selectedAttr(option.value, raw)}>${option.label}</option>`).join('');
+}
+
+function employeeRoleOptions(current) {
+    const raw = String(current || 'NHAN_VIEN').toUpperCase();
+    return `
+      <option value="NHAN_VIEN" ${selectedAttr('NHAN_VIEN', raw)}>Nhân viên</option>
+      <option value="ADMIN" ${selectedAttr('ADMIN', raw)}>Admin</option>
+    `;
+}
+
+function employeeStatusOptions(current) {
+    const raw = String(current || 'DANG_LAM').toUpperCase();
+    return `
+      <option value="DANG_LAM" ${selectedAttr('DANG_LAM', raw)}>Đang làm</option>
+      <option value="NGHI_VIEC" ${selectedAttr('NGHI_VIEC', raw)}>Nghỉ việc</option>
+    `;
+}
+
+async function loadAdminFromBackend() {
+    try {
+        const response = await fetch(`${API_BASE}/admin`);
+        const data = await response.json();
+        if (!response.ok || data.success === false) throw new Error(data.message || `Backend error: ${response.status}`);
+        appState.admin = data;
+        appState.machines = (data.machines || []).map(normalizeMachine);
+        appState.services = data.services || [];
+        renderAdmin();
+        renderHistoryMachineFilter();
+    } catch (error) {
+        console.error('Failed to load admin:', error);
+        const machineBody = document.getElementById('admin-machine-body');
+        const employeeBody = document.getElementById('admin-employee-body');
+        const serviceBody = document.getElementById('admin-service-body');
+        if (machineBody) machineBody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:var(--accent-red);padding:24px;">${escapeHtml(error.message)}</td></tr>`;
+        if (employeeBody) employeeBody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:24px;">Không tải được dữ liệu.</td></tr>';
+        if (serviceBody) serviceBody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:24px;">Không tải được dữ liệu.</td></tr>';
+    }
+}
+
+function renderAdmin() {
+    const data = appState.admin || {};
+    const summary = data.summary || {};
+
+    const totalMachinesEl = document.getElementById('admin-total-machines');
+    const machineBreakdownEl = document.getElementById('admin-machine-breakdown');
+    const activeEmployeesEl = document.getElementById('admin-active-employees');
+    const serviceCountEl = document.getElementById('admin-service-count');
+    const todayRevenueEl = document.getElementById('admin-today-revenue');
+    const openWorkEl = document.getElementById('admin-open-work');
+
+    if (totalMachinesEl) totalMachinesEl.textContent = summary.totalMachines || 0;
+    if (machineBreakdownEl) machineBreakdownEl.textContent = `${summary.activeMachines || 0} đang chơi • ${summary.maintenanceMachines || 0} cần xử lý`;
+    if (activeEmployeesEl) activeEmployeesEl.textContent = summary.activeEmployees || 0;
+    if (serviceCountEl) serviceCountEl.textContent = summary.services || 0;
+    if (todayRevenueEl) todayRevenueEl.textContent = formatCurrency(summary.todayRevenue || 0);
+    if (openWorkEl) openWorkEl.textContent = `${summary.unpaidInvoices || 0} hóa đơn chưa thanh toán • ${summary.activeEvents || 0} sự kiện đang chạy`;
+
+    renderAdminMachines(data.machines || []);
+    renderAdminEmployees(data.employees || []);
+    renderAdminServices(data.services || []);
+}
+
+function renderAdminMachines(machines) {
+    const body = document.getElementById('admin-machine-body');
+    if (!body) return;
+    if (!machines.length) {
+        body.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:24px;">Chưa có máy.</td></tr>';
+        return;
+    }
+
+    body.innerHTML = machines.map(machine => {
+        const id = machine.id;
+        const status = String(machine.tinhTrang || machine.tinhtrang || 'BINH_THUONG').toUpperCase();
+        const isPlaying = status === 'DANG_CHOI';
+        return `
+          <tr>
+            <td>
+              <input id="admin-machine-name-${id}" class="form-input inline-input" value="${escapeHtml(machine.tenMay || machine.tenmay || '')}">
+              <div class="table-muted">#${id}${isPlaying ? ` • LC-${machine.activeSessionId || ''}` : ''}</div>
+            </td>
+            <td>
+              <select id="admin-machine-status-${id}" class="form-select inline-input" ${isPlaying ? 'disabled' : ''}>
+                ${machineStatusOptions(status)}
+              </select>
+            </td>
+            <td><input id="admin-machine-note-${id}" class="form-input inline-input" value="${escapeHtml(machine.ghiChu || machine.ghichu || '')}"></td>
+            <td><button class="btn btn-ghost" onclick="updateAdminMachine(${id})">Lưu</button></td>
+          </tr>
+        `;
+    }).join('');
+}
+
+function renderAdminEmployees(employees) {
+    const body = document.getElementById('admin-employee-body');
+    if (!body) return;
+    if (!employees.length) {
+        body.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:24px;">Chưa có nhân viên.</td></tr>';
+        return;
+    }
+
+    body.innerHTML = employees.map(employee => {
+        const id = employee.id;
+        return `
+          <tr>
+            <td>
+              <input id="admin-employee-name-${id}" class="form-input inline-input" value="${escapeHtml(employee.tenNhanVien || '')}">
+              <input id="admin-employee-phone-${id}" class="form-input inline-input" style="margin-top:6px;" value="${escapeHtml(employee.soDienThoai || '')}" placeholder="Số điện thoại">
+            </td>
+            <td><select id="admin-employee-role-${id}" class="form-select inline-input">${employeeRoleOptions(employee.chucVu)}</select></td>
+            <td><select id="admin-employee-status-${id}" class="form-select inline-input">${employeeStatusOptions(employee.trangThai)}</select></td>
+            <td><button class="btn btn-ghost" onclick="updateAdminEmployee(${id})">Lưu</button></td>
+          </tr>
+        `;
+    }).join('');
+}
+
+function renderAdminServices(services) {
+    const body = document.getElementById('admin-service-body');
+    if (!body) return;
+    if (!services.length) {
+        body.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:24px;">Chưa có dịch vụ.</td></tr>';
+        return;
+    }
+
+    body.innerHTML = services.map(service => {
+        const id = service.id;
+        return `
+          <tr>
+            <td><input id="admin-service-name-${id}" class="form-input inline-input" value="${escapeHtml(service.tenDichVu || '')}"></td>
+            <td><input id="admin-service-price-${id}" class="form-input inline-input" type="number" min="0" step="1000" value="${Number(service.donGia || 0)}"></td>
+            <td><select id="admin-service-type-${id}" class="form-select inline-input">${serviceTypeOptions(service.loai)}</select></td>
+            <td><button class="btn btn-ghost" onclick="updateAdminService(${id})">Lưu</button></td>
+          </tr>
+        `;
+    }).join('');
+}
+
+async function postAdminAction(form) {
+    const response = await fetch(`${API_BASE}/admin`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' },
+        body: form.toString(),
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok || data.success === false) {
+        throw new Error(data.message || `Backend error: ${response.status}`);
+    }
+    return data;
+}
+
+async function submitAdminMachineForm(event) {
+    event.preventDefault();
+    const form = new URLSearchParams();
+    form.set('action', 'createMachine');
+    form.set('tenMay', document.getElementById('admin-new-machine-name').value.trim());
+    form.set('tinhTrang', document.getElementById('admin-new-machine-status').value);
+    form.set('ghiChu', document.getElementById('admin-new-machine-note').value.trim());
+    try {
+        await postAdminAction(form);
+        document.getElementById('admin-machine-form').reset();
+        await loadAdminFromBackend();
+        await loadMachinesFromBackend();
+        alert('Đã thêm máy.');
+    } catch (error) {
+        alert(`Thêm máy thất bại: ${error.message}`);
+    }
+}
+
+async function submitAdminEmployeeForm(event) {
+    event.preventDefault();
+    const form = new URLSearchParams();
+    form.set('action', 'createEmployee');
+    form.set('tenNhanVien', document.getElementById('admin-new-employee-name').value.trim());
+    form.set('soDienThoai', document.getElementById('admin-new-employee-phone').value.trim());
+    form.set('chucVu', document.getElementById('admin-new-employee-role').value);
+    form.set('trangThai', document.getElementById('admin-new-employee-status').value);
+    try {
+        await postAdminAction(form);
+        document.getElementById('admin-employee-form').reset();
+        await loadAdminFromBackend();
+        alert('Đã thêm nhân viên.');
+    } catch (error) {
+        alert(`Thêm nhân viên thất bại: ${error.message}`);
+    }
+}
+
+async function submitAdminServiceForm(event) {
+    event.preventDefault();
+    const form = new URLSearchParams();
+    form.set('action', 'createService');
+    form.set('tenDichVu', document.getElementById('admin-new-service-name').value.trim());
+    form.set('donGia', document.getElementById('admin-new-service-price').value);
+    form.set('loai', document.getElementById('admin-new-service-type').value);
+    try {
+        await postAdminAction(form);
+        document.getElementById('admin-service-form').reset();
+        await loadAdminFromBackend();
+        await loadServicesFromBackend();
+        alert('Đã thêm dịch vụ.');
+    } catch (error) {
+        alert(`Thêm dịch vụ thất bại: ${error.message}`);
+    }
+}
+
+async function updateAdminMachine(id) {
+    const form = new URLSearchParams();
+    const statusEl = document.getElementById(`admin-machine-status-${id}`);
+    form.set('action', 'updateMachine');
+    form.set('id', id);
+    form.set('tenMay', document.getElementById(`admin-machine-name-${id}`).value.trim());
+    form.set('tinhTrang', statusEl ? statusEl.value : 'BINH_THUONG');
+    form.set('ghiChu', document.getElementById(`admin-machine-note-${id}`).value.trim());
+    try {
+        await postAdminAction(form);
+        await loadAdminFromBackend();
+        await loadMachinesFromBackend();
+        alert('Đã lưu máy.');
+    } catch (error) {
+        alert(`Lưu máy thất bại: ${error.message}`);
+    }
+}
+
+async function updateAdminEmployee(id) {
+    const form = new URLSearchParams();
+    form.set('action', 'updateEmployee');
+    form.set('id', id);
+    form.set('tenNhanVien', document.getElementById(`admin-employee-name-${id}`).value.trim());
+    form.set('soDienThoai', document.getElementById(`admin-employee-phone-${id}`).value.trim());
+    form.set('chucVu', document.getElementById(`admin-employee-role-${id}`).value);
+    form.set('trangThai', document.getElementById(`admin-employee-status-${id}`).value);
+    try {
+        await postAdminAction(form);
+        await loadAdminFromBackend();
+        alert('Đã lưu nhân viên.');
+    } catch (error) {
+        alert(`Lưu nhân viên thất bại: ${error.message}`);
+    }
+}
+
+async function updateAdminService(id) {
+    const form = new URLSearchParams();
+    form.set('action', 'updateService');
+    form.set('id', id);
+    form.set('tenDichVu', document.getElementById(`admin-service-name-${id}`).value.trim());
+    form.set('donGia', document.getElementById(`admin-service-price-${id}`).value);
+    form.set('loai', document.getElementById(`admin-service-type-${id}`).value);
+    try {
+        await postAdminAction(form);
+        await loadAdminFromBackend();
+        await loadServicesFromBackend();
+        alert('Đã lưu dịch vụ.');
+    } catch (error) {
+        alert(`Lưu dịch vụ thất bại: ${error.message}`);
+    }
 }
 
 function setDefaultDateInputs() {

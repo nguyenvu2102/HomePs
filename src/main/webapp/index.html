@@ -127,6 +127,12 @@ body {
 }
 .user-name { font-size: 13px; font-weight: 600; }
 .user-role { font-size: 11px; color: var(--text-muted); }
+.logout-button {
+  width: 100%;
+  justify-content: center;
+  margin-top: 12px;
+  padding: 10px 12px;
+}
 
 /* Main content */
 .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
@@ -799,6 +805,44 @@ body {
 }
 .search-box input::placeholder { color: var(--text-muted); }
 
+/* Modal */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(2, 6, 23, 0.72);
+  backdrop-filter: blur(8px);
+}
+.modal-backdrop.show { display: flex; }
+.modal-card {
+  width: min(440px, 100%);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 22px;
+}
+.modal-title {
+  font-size: 18px;
+  font-weight: 800;
+  margin-bottom: 4px;
+}
+.modal-subtitle {
+  color: var(--text-secondary);
+  font-size: 13px;
+  margin-bottom: 18px;
+}
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 18px;
+}
+
 /* Donut chart CSS */
 .donut-chart {
   width: 140px;
@@ -969,6 +1013,10 @@ body {
           <div class="user-role">Owner</div>
         </div>
       </div>
+      <button class="btn btn-ghost logout-button" onclick="logout()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Đăng xuất
+      </button>
     </div>
   </div>
 
@@ -1563,9 +1611,57 @@ body {
    </div>
  </div>
 
- <!-- Các modal giữ nguyên -->
+<!-- Các modal giữ nguyên -->
+<div id="add-machine-modal" class="modal-backdrop" onclick="handleModalBackdrop(event)">
+  <form id="quick-machine-form" class="modal-card" onclick="event.stopPropagation()" onsubmit="submitQuickMachineForm(event)">
+    <div class="modal-title">Thêm máy mới</div>
+    <div class="modal-subtitle">Tạo máy PS trống để đưa vào danh sách vận hành.</div>
+    <div class="form-group">
+      <label class="form-label" for="quick-machine-name">Tên máy</label>
+      <input id="quick-machine-name" class="form-input" placeholder="VD: PS 21" required>
+    </div>
+    <div class="form-group">
+      <label class="form-label" for="quick-machine-note">Ghi chú</label>
+      <input id="quick-machine-note" class="form-input" placeholder="Khu vực, cấu hình hoặc tình trạng">
+    </div>
+    <div class="modal-actions">
+      <button type="button" class="btn btn-ghost" onclick="closeAddMachineDialog()">Hủy</button>
+      <button type="submit" class="btn btn-primary">Thêm máy</button>
+    </div>
+  </form>
+</div>
 
- <script>
+<div id="add-service-modal" class="modal-backdrop" onclick="handleModalBackdrop(event)">
+  <form id="quick-service-form" class="modal-card" onclick="event.stopPropagation()" onsubmit="submitQuickServiceForm(event)">
+    <div class="modal-title">Thêm dịch vụ</div>
+    <div class="modal-subtitle">Tạo món mới trong menu dịch vụ.</div>
+    <div class="form-group">
+      <label class="form-label" for="quick-service-name">Tên dịch vụ</label>
+      <input id="quick-service-name" class="form-input" placeholder="VD: Sting đỏ" required>
+    </div>
+    <div class="admin-form-grid">
+      <div class="form-group">
+        <label class="form-label" for="quick-service-price">Đơn giá</label>
+        <input id="quick-service-price" class="form-input" type="number" min="0" step="1000" placeholder="15000" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="quick-service-type">Loại</label>
+        <select id="quick-service-type" class="form-select">
+          <option value="DO_AN">Đồ ăn</option>
+          <option value="NUOC">Đồ uống</option>
+          <option value="SNACK">Snack</option>
+          <option value="KHAC">Khác</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button type="button" class="btn btn-ghost" onclick="closeServiceCatalog()">Hủy</button>
+      <button type="submit" class="btn btn-primary">Thêm dịch vụ</button>
+    </div>
+  </form>
+</div>
+
+<script>
 const APP_BASE = (() => {
   const path = window.location.pathname.replace(/\\/g, '/');
   if (path === '/' || path === '') return '';
@@ -1586,6 +1682,8 @@ const appState = {
   history: null,
   admin: null,
   eventFilter: 'ALL',
+  serviceFilter: 'ALL',
+  serviceSearch: '',
   selectedMachineId: null,
   timeIntervals: {}
 };
@@ -1650,6 +1748,20 @@ async function login() {
   }
 }
 
+function setupLoginShortcut() {
+    const usernameInput = document.getElementById('login-username');
+    const passwordInput = document.getElementById('login-password');
+    [usernameInput, passwordInput].forEach(input => {
+        if (!input) return;
+        input.addEventListener('keydown', event => {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                login();
+            }
+        });
+    });
+}
+
 function updateUserInfo(user) {
     if (!user) return;
     const nameDiv = document.querySelector('.user-name');
@@ -1679,6 +1791,29 @@ function checkLoginStatus() {
     } else {
         document.getElementById('login-screen').style.display = 'flex';
         document.getElementById('main-app').style.display = 'none';
+    }
+}
+
+function getCurrentUser() {
+    try {
+        return JSON.parse(sessionStorage.getItem('currentUser') || 'null');
+    } catch (error) {
+        return null;
+    }
+}
+
+async function logout() {
+    try {
+        await fetch(`${APP_BASE}/logout`, { credentials: 'same-origin' });
+    } catch (error) {
+        console.warn('Logout request failed, clearing local session anyway:', error);
+    } finally {
+        sessionStorage.removeItem('currentUser');
+        appState.selectedMachineId = null;
+        document.getElementById('main-app').style.display = 'none';
+        document.getElementById('login-screen').style.display = 'flex';
+        const passwordInput = document.getElementById('login-password');
+        if (passwordInput) passwordInput.value = '';
     }
 }
 
@@ -1939,6 +2074,221 @@ function renderServiceCards() {
             <div class="service-category">${escapeHtml(service.loai)}</div>
         </div>
     `).join('');
+}
+
+function normalizeSearchValue(value) {
+    return String(value || '')
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase()
+        .trim();
+}
+
+function getServiceType(service) {
+    return String(service.loai || service.loaiDichVu || service.loaidichvu || 'KHAC').toUpperCase();
+}
+
+function getServiceName(service) {
+    return service.tenDichVu || service.tendichvu || service.ten || 'Dịch vụ';
+}
+
+function getServicePrice(service) {
+    return Number(service.donGia ?? service.dongia ?? service.gia ?? 0) || 0;
+}
+
+function getServiceCategoryLabel(type) {
+    const labels = {
+        DO_AN: 'Đồ ăn',
+        NUOC: 'Đồ uống',
+        SNACK: 'Snack',
+        KHAC: 'Khác'
+    };
+    return labels[type] || type;
+}
+
+function getServiceEmoji(type) {
+    const emojis = {
+        DO_AN: '🍜',
+        NUOC: '🥤',
+        SNACK: '🍿',
+        KHAC: '🛒'
+    };
+    return emojis[type] || emojis.KHAC;
+}
+
+function setupServiceControls() {
+    const filters = ['ALL', 'DO_AN', 'NUOC', 'SNACK'];
+    document.querySelectorAll('#page-services .tab-btn').forEach((button, index) => {
+        const filter = button.dataset.serviceFilter || filters[index] || 'ALL';
+        button.dataset.serviceFilter = filter;
+        button.onclick = () => setServiceFilter(filter);
+    });
+
+    const searchInput = document.querySelector('#page-services .search-box input');
+    if (searchInput) {
+        searchInput.id = searchInput.id || 'service-search-input';
+        searchInput.addEventListener('input', () => setServiceSearch(searchInput.value));
+    }
+    updateServiceFilterButtons();
+}
+
+function updateServiceFilterButtons() {
+    document.querySelectorAll('#page-services .tab-btn').forEach(button => {
+        button.classList.toggle('active', button.dataset.serviceFilter === appState.serviceFilter);
+    });
+}
+
+function setServiceFilter(filter) {
+    appState.serviceFilter = filter || 'ALL';
+    updateServiceFilterButtons();
+    renderServiceCards();
+}
+
+function setServiceSearch(value) {
+    appState.serviceSearch = value || '';
+    renderServiceCards();
+}
+
+function renderServiceCards() {
+    const grid = document.getElementById('service-grid');
+    if (!grid) return;
+
+    const searchTerm = normalizeSearchValue(appState.serviceSearch);
+    const filteredServices = appState.services.filter(service => {
+        const type = getServiceType(service);
+        const matchesFilter = appState.serviceFilter === 'ALL' || type === appState.serviceFilter;
+        const searchText = normalizeSearchValue(`${getServiceName(service)} ${type} ${getServiceCategoryLabel(type)}`);
+        return matchesFilter && (!searchTerm || searchText.includes(searchTerm));
+    });
+
+    if (appState.services.length === 0) {
+        grid.innerHTML = '<div class="stat-card" style="grid-column:1/-1;text-align:center;padding:24px;">Không có dịch vụ nào.</div>';
+        return;
+    }
+
+    if (filteredServices.length === 0) {
+        grid.innerHTML = '<div class="stat-card" style="grid-column:1/-1;text-align:center;padding:24px;">Không tìm thấy dịch vụ phù hợp.</div>';
+        return;
+    }
+
+    grid.innerHTML = filteredServices.map(service => {
+        const type = getServiceType(service);
+        return `
+            <div class="service-card" onclick="addServiceToMachine(${service.id})">
+                <div class="service-emoji">${getServiceEmoji(type)}</div>
+                <div class="service-name">${escapeHtml(getServiceName(service))}</div>
+                <div class="service-price">${formatCurrency(getServicePrice(service))}</div>
+                <div class="service-category">${escapeHtml(getServiceCategoryLabel(type))}</div>
+            </div>
+        `;
+    }).join('');
+}
+
+function openModal(id) {
+    const modal = document.getElementById(id);
+    if (modal) modal.classList.add('show');
+}
+
+function closeModal(id) {
+    const modal = document.getElementById(id);
+    if (modal) modal.classList.remove('show');
+}
+
+function handleModalBackdrop(event) {
+    if (event.target && event.target.classList.contains('modal-backdrop')) {
+        closeModal(event.target.id);
+    }
+}
+
+function openAddMachineDialog() {
+    const form = document.getElementById('quick-machine-form');
+    if (form) form.reset();
+    openModal('add-machine-modal');
+    setTimeout(() => document.getElementById('quick-machine-name')?.focus(), 0);
+}
+
+function closeAddMachineDialog() {
+    closeModal('add-machine-modal');
+}
+
+async function submitQuickMachineForm(event) {
+    event.preventDefault();
+    const name = document.getElementById('quick-machine-name').value.trim();
+    const note = document.getElementById('quick-machine-note').value.trim();
+    if (!name) {
+        alert('Vui lòng nhập tên máy.');
+        return;
+    }
+
+    const form = new URLSearchParams();
+    form.set('action', 'create');
+    form.set('tenMay', name);
+    form.set('ghiChu', note);
+
+    try {
+        const response = await fetch(`${API_BASE}/machines`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' },
+            body: form.toString(),
+        });
+        const result = await response.json().catch(() => ({}));
+        if (!response.ok || result.success === false) {
+            throw new Error(result.message || `Backend error: ${response.status}`);
+        }
+        closeAddMachineDialog();
+        await loadMachinesFromBackend();
+        if (document.getElementById('page-admin')?.classList.contains('active')) {
+            await loadAdminFromBackend();
+        }
+        alert('Đã thêm máy mới.');
+    } catch (error) {
+        alert(`Thêm máy thất bại: ${error.message}`);
+    }
+}
+
+function openServiceCatalog() {
+    const user = getCurrentUser();
+    if (!user || user.role !== 'ADMIN') {
+        alert('Chỉ tài khoản admin được thêm dịch vụ mới.');
+        return;
+    }
+    const form = document.getElementById('quick-service-form');
+    if (form) form.reset();
+    openModal('add-service-modal');
+    setTimeout(() => document.getElementById('quick-service-name')?.focus(), 0);
+}
+
+function closeServiceCatalog() {
+    closeModal('add-service-modal');
+}
+
+async function submitQuickServiceForm(event) {
+    event.preventDefault();
+    const name = document.getElementById('quick-service-name').value.trim();
+    const price = document.getElementById('quick-service-price').value;
+    const type = document.getElementById('quick-service-type').value;
+    if (!name || Number(price) < 0) {
+        alert('Vui lòng nhập đầy đủ thông tin dịch vụ.');
+        return;
+    }
+
+    const form = new URLSearchParams();
+    form.set('action', 'createService');
+    form.set('tenDichVu', name);
+    form.set('donGia', price);
+    form.set('loai', type);
+
+    try {
+        await postAdminAction(form);
+        closeServiceCatalog();
+        await loadServicesFromBackend();
+        if (document.getElementById('page-admin')?.classList.contains('active')) {
+            await loadAdminFromBackend();
+        }
+        alert('Đã thêm dịch vụ.');
+    } catch (error) {
+        alert(`Thêm dịch vụ thất bại: ${error.message}`);
+    }
 }
 
 async function addServiceToMachine(serviceId) {
@@ -2850,8 +3200,17 @@ function escapeHtml(value) {
 // Init
 document.addEventListener('DOMContentLoaded', () => {
     setDefaultDateInputs();
+    setupLoginShortcut();
+    setupServiceControls();
     checkLoginStatus();
     updateClock();
+});
+
+document.addEventListener('keydown', event => {
+    if (event.key === 'Escape') {
+        closeModal('add-machine-modal');
+        closeModal('add-service-modal');
+    }
 });
 
 </script>

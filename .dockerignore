@@ -15,6 +15,9 @@
 target/
 dist/
 build/
+maven/
+tomcat/
+.mvn/
 
 # Node files (if used)
 node_modules/

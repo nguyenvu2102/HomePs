@@ -36,6 +36,7 @@ services:
       DB_URL: jdbc:postgresql://db:5432/homeps
       DB_USER: postgres
       DB_PASSWORD: postgres
+      TZ: Asia/Ho_Chi_Minh
     networks:
       - homeps_network
 

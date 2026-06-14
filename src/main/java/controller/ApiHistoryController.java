@@ -64,7 +64,7 @@ public class ApiHistoryController extends HttpServlet {
             params.add(machineId);
         }
         if (!statusParam.isEmpty() && !"ALL".equals(statusParam)) {
-            if ("DANG_CHOI".equals(statusParam) || "DA_KET_THUC".equals(statusParam)) {
+            if ("DANG_CHOI".equals(statusParam) || "TAM_DUNG".equals(statusParam) || "DA_KET_THUC".equals(statusParam)) {
                 sql.append("AND lc.trangthai = ? ");
             } else {
                 sql.append("AND hd.trangthai = ? ");
@@ -102,7 +102,7 @@ public class ApiHistoryController extends HttpServlet {
                     String invoiceStatus = valueOf(rs.getString("hoadon_trangthai"));
                     double rowRevenue = invoiceId == null ? rs.getDouble("tongtiengio") : rs.getDouble("tongtien");
 
-                    if ("DANG_CHOI".equalsIgnoreCase(sessionStatus)) {
+                    if ("DANG_CHOI".equalsIgnoreCase(sessionStatus) || "TAM_DUNG".equalsIgnoreCase(sessionStatus)) {
                         activeSessions++;
                     } else {
                         completedSessions++;

@@ -47,21 +47,19 @@ public class ApiMachineController extends HttpServlet {
             item.put("tinhtrang", machine.getTinhTrang());
             item.put("ghichu", machine.getGhiChu());
 
-            Optional<LuotChoi> activeSessionOpt = luotChoiDAO.findActiveByMayId(machine.getId());
+            Optional<LuotChoi> activeSessionOpt = luotChoiDAO.findOpenByMayId(machine.getId());
             if (activeSessionOpt.isPresent()) {
                 LuotChoi session = activeSessionOpt.get();
-                long minutesElapsed = Math.max(0, java.time.Duration.between(
-                        session.getThoiGianBatDau().toInstant(),
-                        java.time.Instant.now()
-                ).toMinutes());
-
-                double estimatedCost = session.getDonGiaGio() * (minutesElapsed / 60.0);
+                double estimatedCost = calculateEstimatedCost(session);
+                long minutesElapsed = calculateEstimatedMinutes(session, estimatedCost);
 
                 item.put("luotchoiId", session.getId());
                 item.put("thoiGianBatDau", session.getThoiGianBatDau().getTime());
+                item.put("thoiGianKetThuc", session.getThoiGianKetThuc() == null ? null : session.getThoiGianKetThuc().getTime());
                 item.put("minutesElapsed", minutesElapsed);
                 item.put("estimatedCost", estimatedCost);
                 item.put("donGiaGio", session.getDonGiaGio());
+                item.put("trangThaiLuotChoi", session.getTrangThai());
 
                 // Lấy thông tin hóa đơn và dịch vụ đã gọi
                 Optional<HoaDon> hoaDonOpt = hoaDonDAO.findByLuotChoiId(session.getId());
@@ -77,9 +75,11 @@ public class ApiMachineController extends HttpServlet {
             } else {
                 item.put("luotchoiId", null);
                 item.put("thoiGianBatDau", null);
+                item.put("thoiGianKetThuc", null);
                 item.put("minutesElapsed", 0);
                 item.put("estimatedCost", 0);
                 item.put("donGiaGio", 0);
+                item.put("trangThaiLuotChoi", null);
                 item.put("dichVuDaGoi", List.of());
                 item.put("tienDichVu", 0);
             }
@@ -127,6 +127,16 @@ public class ApiMachineController extends HttpServlet {
 
         if ("close".equals(action)) {
             handleClose(response, machineOpt.get());
+            return;
+        }
+
+        if ("pause".equals(action)) {
+            handlePause(response, machineOpt.get());
+            return;
+        }
+
+        if ("resume".equals(action)) {
+            handleResume(response, machineOpt.get());
             return;
         }
 
@@ -234,8 +244,9 @@ public class ApiMachineController extends HttpServlet {
         try (Connection conn = DBConnection.getConnection()) {
             conn.setAutoCommit(false);
             try {
-                Optional<LuotChoi> activeSessionOpt = luotChoiDAO.findActiveByMayId(machine.getId());
+                Optional<LuotChoi> activeSessionOpt = luotChoiDAO.findOpenByMayId(machine.getId());
                 if (activeSessionOpt.isEmpty()) {
+                    conn.rollback();
                     write(response, HttpServletResponse.SC_CONFLICT, Map.of("success", false, "message", "Máy chưa có lượt chơi đang hoạt động"));
                     return;
                 }
@@ -261,10 +272,7 @@ public class ApiMachineController extends HttpServlet {
                 double tienDichVu = hoaDon.getTienDichVu();
                 double tienKhuyenMai = hoaDon.getTienKhuyenMai();
                 double tongTien = Math.max(0, totalHoursMoney + tienDichVu - tienKhuyenMai);
-                long minutesElapsed = Math.max(1, java.time.Duration.between(
-                        activeSession.getThoiGianBatDau().toInstant(),
-                        java.time.Instant.now()
-                ).toMinutes());
+                long minutesElapsed = calculateEstimatedMinutes(activeSession, totalHoursMoney);
 
                 boolean updated = mayPSDAO.updateTinhTrang(conn, machine.getId(), "BINH_THUONG");
                 if (!updated) {
@@ -279,8 +287,8 @@ public class ApiMachineController extends HttpServlet {
                 payload.put("success", true);
                 payload.put("message", "Đã đóng máy");
                 payload.put("totalHoursMoney", totalHoursMoney);
+                payload.put("sessionId", activeSession.getId());
                 payload.put("luotChoiId", activeSession.getId());
-                payload.put("luotchoiId", activeSession.getId());
                 payload.put("hoaDonId", hoaDon.getId());
                 payload.put("tienChoi", totalHoursMoney);
                 payload.put("tienDichVu", tienDichVu);
@@ -302,10 +310,119 @@ public class ApiMachineController extends HttpServlet {
         }
     }
 
+    private void handlePause(HttpServletResponse response, MayPS machine) throws IOException {
+        try (Connection conn = DBConnection.getConnection()) {
+            conn.setAutoCommit(false);
+            try {
+                Optional<Double> pausedCost = luotChoiDAO.pauseLuotChoi(conn, machine.getId());
+                if (pausedCost.isEmpty()) {
+                    conn.rollback();
+                    write(response, HttpServletResponse.SC_CONFLICT, Map.of(
+                            "success", false,
+                            "message", "May chua co luot choi dang chay"
+                    ));
+                    return;
+                }
+
+                boolean updated = mayPSDAO.updateTinhTrang(conn, machine.getId(), "TAM_DUNG");
+                if (!updated) {
+                    conn.rollback();
+                    write(response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, Map.of(
+                            "success", false,
+                            "message", "Khong the tam dung may"
+                    ));
+                    return;
+                }
+
+                conn.commit();
+                write(response, HttpServletResponse.SC_OK, Map.of(
+                        "success", true,
+                        "message", "Da tam dung luot choi",
+                        "estimatedCost", pausedCost.get(),
+                        "machine", mayPSDAO.findById(machine.getId()).orElse(machine)
+                ));
+            } catch (Exception e) {
+                conn.rollback();
+                throw e;
+            } finally {
+                conn.setAutoCommit(true);
+            }
+        } catch (Exception e) {
+            write(response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, Map.of(
+                    "success", false,
+                    "message", "Khong the tam dung may: " + e.getMessage()
+            ));
+        }
+    }
+
+    private void handleResume(HttpServletResponse response, MayPS machine) throws IOException {
+        try (Connection conn = DBConnection.getConnection()) {
+            conn.setAutoCommit(false);
+            try {
+                boolean resumed = luotChoiDAO.resumeLuotChoi(conn, machine.getId());
+                if (!resumed) {
+                    conn.rollback();
+                    write(response, HttpServletResponse.SC_CONFLICT, Map.of(
+                            "success", false,
+                            "message", "May khong co luot choi tam dung"
+                    ));
+                    return;
+                }
+
+                boolean updated = mayPSDAO.updateTinhTrang(conn, machine.getId(), "DANG_CHOI");
+                if (!updated) {
+                    conn.rollback();
+                    write(response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, Map.of(
+                            "success", false,
+                            "message", "Khong the tiep tuc may"
+                    ));
+                    return;
+                }
+
+                conn.commit();
+                write(response, HttpServletResponse.SC_OK, Map.of(
+                        "success", true,
+                        "message", "Da tiep tuc luot choi",
+                        "machine", mayPSDAO.findById(machine.getId()).orElse(machine)
+                ));
+            } catch (Exception e) {
+                conn.rollback();
+                throw e;
+            } finally {
+                conn.setAutoCommit(true);
+            }
+        } catch (Exception e) {
+            write(response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, Map.of(
+                    "success", false,
+                    "message", "Khong the tiep tuc may: " + e.getMessage()
+            ));
+        }
+    }
+
 
     private static boolean isMachineInUse(MayPS machine) {
         String status = valueOf(machine.getTinhTrang()).toUpperCase();
-        return "DANG_CHOI".equals(status) || "DANG_SU_DUNG".equals(status) || "IN_USE".equals(status) || "BUSY".equals(status);
+        return "DANG_CHOI".equals(status) || "DANG_SU_DUNG".equals(status) || "TAM_DUNG".equals(status) ||
+                "PAUSED".equals(status) || "IN_USE".equals(status) || "BUSY".equals(status);
+    }
+
+    private static double calculateEstimatedCost(LuotChoi session) {
+        double total = Math.max(0, session.getTongTienGio());
+        if ("DANG_CHOI".equalsIgnoreCase(session.getTrangThai()) && session.getThoiGianBatDau() != null) {
+            long minutes = Math.max(0, java.time.Duration.between(
+                    session.getThoiGianBatDau().toInstant(),
+                    java.time.Instant.now()
+            ).toMinutes());
+            total += session.getDonGiaGio() * (minutes / 60.0);
+        }
+        return total;
+    }
+
+    private static long calculateEstimatedMinutes(LuotChoi session, double estimatedCost) {
+        if (session.getDonGiaGio() <= 0) {
+            return 0;
+        }
+        return Math.max(0, Math.round((estimatedCost / session.getDonGiaGio()) * 60));
     }
 
     private static int resolveNhanVienId(HttpServletRequest request) {

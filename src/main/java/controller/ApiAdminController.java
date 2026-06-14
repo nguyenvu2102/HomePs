@@ -151,7 +151,7 @@ public class ApiAdminController extends HttpServlet {
             write(response, HttpServletResponse.SC_BAD_REQUEST, Map.of("success", false, "message", "Ten may khong duoc de trong"));
             return;
         }
-        if ("DANG_CHOI".equals(status)) {
+        if (isOpenMachineStatus(status)) {
             write(response, HttpServletResponse.SC_BAD_REQUEST, Map.of("success", false, "message", "Mo may tu man hinh Quan ly may"));
             return;
         }
@@ -192,11 +192,11 @@ public class ApiAdminController extends HttpServlet {
                 write(response, HttpServletResponse.SC_NOT_FOUND, Map.of("success", false, "message", "Khong tim thay may"));
                 return;
             }
-            if ("DANG_CHOI".equals(currentStatus) && !"DANG_CHOI".equals(status)) {
+            if (isOpenMachineStatus(currentStatus) && !currentStatus.equals(status)) {
                 write(response, HttpServletResponse.SC_CONFLICT, Map.of("success", false, "message", "May dang choi, hay dong may truoc khi doi trang thai"));
                 return;
             }
-            if (!"DANG_CHOI".equals(currentStatus) && "DANG_CHOI".equals(status)) {
+            if (!isOpenMachineStatus(currentStatus) && isOpenMachineStatus(status)) {
                 write(response, HttpServletResponse.SC_BAD_REQUEST, Map.of("success", false, "message", "Mo may tu man hinh Quan ly may"));
                 return;
             }
@@ -251,7 +251,7 @@ public class ApiAdminController extends HttpServlet {
         String sql =
                 "SELECT " +
                         "(SELECT COUNT(*) FROM mayps) AS total_machines, " +
-                        "(SELECT COUNT(*) FROM mayps WHERE tinhtrang IN ('DANG_CHOI','DANG_SU_DUNG')) AS active_machines, " +
+                        "(SELECT COUNT(*) FROM mayps WHERE tinhtrang IN ('DANG_CHOI','DANG_SU_DUNG','TAM_DUNG')) AS active_machines, " +
                         "(SELECT COUNT(*) FROM mayps WHERE tinhtrang IN ('BINH_THUONG','TRONG')) AS vacant_machines, " +
                         "(SELECT COUNT(*) FROM mayps WHERE tinhtrang IN ('BAO_TRI','HONG')) AS maintenance_machines, " +
                         "(SELECT COUNT(*) FROM nhanvien WHERE trangthai = 'DANG_LAM') AS active_employees, " +
@@ -278,7 +278,7 @@ public class ApiAdminController extends HttpServlet {
 
     private List<Map<String, Object>> loadMachines(Connection conn) throws Exception {
         String sql = "SELECT m.id, m.tenmay, m.tinhtrang, m.ghichu, " +
-                "(SELECT lc.id FROM luotchoi lc WHERE lc.mayid = m.id AND lc.trangthai = 'DANG_CHOI' ORDER BY lc.thoigianbatdau DESC LIMIT 1) AS active_session_id " +
+                "(SELECT lc.id FROM luotchoi lc WHERE lc.mayid = m.id AND lc.trangthai IN ('DANG_CHOI','TAM_DUNG') ORDER BY lc.id DESC LIMIT 1) AS active_session_id " +
                 "FROM mayps m ORDER BY m.id ASC";
         List<Map<String, Object>> rows = new ArrayList<>();
         try (PreparedStatement ps = conn.prepareStatement(sql);
@@ -350,9 +350,13 @@ public class ApiAdminController extends HttpServlet {
     private static String normalizeMachineStatus(String value) {
         String status = valueOf(value).trim().toUpperCase();
         return switch (status) {
-            case "DANG_CHOI", "BAO_TRI", "HONG" -> status;
+            case "DANG_CHOI", "TAM_DUNG", "BAO_TRI", "HONG" -> status;
             default -> "BINH_THUONG";
         };
+    }
+
+    private static boolean isOpenMachineStatus(String status) {
+        return "DANG_CHOI".equals(status) || "TAM_DUNG".equals(status);
     }
 
     private static String normalizeServiceType(String value) {

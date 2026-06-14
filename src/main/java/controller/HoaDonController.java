@@ -19,12 +19,15 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
 @WebServlet(urlPatterns = {"/hoadon"})
 public class HoaDonController extends HttpServlet {
+    private static final ZoneId BUSINESS_ZONE = ZoneId.of("Asia/Ho_Chi_Minh");
+
     private final HoaDonDAO hoaDonDAO = new HoaDonDAO();
     private final ChiTietHoaDonDAO chiTietDAO = new ChiTietHoaDonDAO();
     private final DichVuDAO dichVuDAO = new DichVuDAO();
@@ -169,7 +172,7 @@ public class HoaDonController extends HttpServlet {
 
     private double tinhKhuyenMai(int luotChoiId, double tienChoi, double tienDichVu) {
         try {
-            LocalDateTime thoiGianChoi = LocalDateTime.now();
+            LocalDateTime thoiGianChoi = LocalDateTime.now(BUSINESS_ZONE);
             List<SuKien> suKienHoatDong = suKienDAO.getActiveByTime(thoiGianChoi);
 
             double tongChiPhi = tienChoi + tienDichVu;
@@ -177,7 +180,8 @@ public class HoaDonController extends HttpServlet {
 
             for (SuKien sk : suKienHoatDong) {
                 if (appliesTo(sk, thoiGianChoi)) {
-                    khuyenMai += tongChiPhi * (sk.getPhanTramGiamGia() / 100.0);
+                    double percent = Math.max(0, Math.min(100, sk.getPhanTramGiamGia()));
+                    khuyenMai += tongChiPhi * (percent / 100.0);
                 }
             }
 
@@ -188,8 +192,13 @@ public class HoaDonController extends HttpServlet {
     }
 
     private boolean appliesTo(SuKien suKien, LocalDateTime time) {
+        String loaiSuKien = text(suKien.getLoaiSuKien()).toUpperCase();
+        if (loaiSuKien.isEmpty() || "THEO_KHOANG_THOI_GIAN".equals(loaiSuKien)) {
+            return true;
+        }
+
         String ngayApDung = text(suKien.getNgayApDung());
-        if (!ngayApDung.isEmpty()) {
+        if (("THEO_NGAY".equals(loaiSuKien) || !ngayApDung.isEmpty()) && !ngayApDung.isEmpty()) {
             try {
                 if (!LocalDate.parse(ngayApDung).equals(time.toLocalDate())) {
                     return false;
@@ -199,7 +208,7 @@ public class HoaDonController extends HttpServlet {
             }
         }
 
-        String gioApDung = text(suKien.getGioApDung());
+        String gioApDung = text(suKien.getGioApDung()).replace('–', '-').replace('—', '-');
         if (!gioApDung.isEmpty() && gioApDung.contains("-")) {
             try {
                 String[] parts = gioApDung.split("-", 2);

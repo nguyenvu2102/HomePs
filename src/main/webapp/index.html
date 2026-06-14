@@ -1190,6 +1190,7 @@ body {
                 <th>Giảm giá</th>
                 <th>Tổng</th>
                 <th>Trạng thái</th>
+                <th>Xuất</th>
               </tr>
             </thead>
             <tbody id="invoice-table-body"></tbody>
@@ -1375,6 +1376,7 @@ body {
           <select id="history-status-filter" class="form-select" style="width:180px;" onchange="loadHistoryFromBackend()">
             <option value="ALL">Tất cả trạng thái</option>
             <option value="DANG_CHOI">Đang chơi</option>
+            <option value="TAM_DUNG">Tạm dừng</option>
             <option value="DA_KET_THUC">Đã kết thúc</option>
             <option value="DA_THANH_TOAN">Đã thanh toán</option>
             <option value="CHUA_THANH_TOAN">Chưa thanh toán</option>
@@ -1445,6 +1447,7 @@ body {
           <p>Quản lý máy, nhân viên, dịch vụ và trạng thái vận hành</p>
         </div>
         <div class="header-actions">
+          <button class="btn btn-primary" onclick="backupData()">Sao lưu dữ liệu</button>
           <button class="btn btn-ghost" onclick="loadAdminFromBackend()">Làm mới</button>
         </div>
       </div>
@@ -1911,7 +1914,7 @@ function updateMachineStats() {
     let broken = 0;
 
     appState.machines.forEach(m => {
-        if (m.stateClass === 'in-use') active++;
+        if (['in-use', 'paused'].includes(m.stateClass)) active++;
         else if (m.stateClass === 'vacant') empty++;
         else if (m.stateClass === 'maintenance') broken++;
     });
@@ -1980,12 +1983,13 @@ function renderMachineDetails(machine) {
     </div>
   `;
 
-  if (machine.stateClass === 'in-use') {
+  if (['in-use', 'paused'].includes(machine.stateClass)) {
     const startTime = new Date(machine.thoiGianBatDau).toLocaleTimeString('vi-VN');
     const timePlayed = `${Math.floor(machine.minutesElapsed / 60)}h ${machine.minutesElapsed % 60}m`;
     const services = machine.dichVuDaGoi || [];
     const serviceTotal = machine.tienDichVu || 0;
     const total = (machine.estimatedCost || 0) + serviceTotal;
+    const canOrderMore = machine.stateClass === 'in-use';
 
     let servicesHtml = '<div style="text-align:center;color:var(--text-muted);font-size:12px;padding:10px 0;">Chưa gọi dịch vụ nào.</div>';
     if(services.length > 0) {
@@ -2011,7 +2015,7 @@ function renderMachineDetails(machine) {
       <div class="detail-section">
         <div class="section-header">
           <h4 style="margin:0;">Dịch vụ đã gọi</h4>
-          <button class="btn btn-ghost" style="padding:4px 10px;font-size:11px;" onclick="switchPage('services')">+ Gọi thêm</button>
+          ${canOrderMore ? "<button class='btn btn-ghost' style='padding:4px 10px;font-size:11px;' onclick='switchPage(\"services\")'>+ Gọi thêm</button>" : ''}
         </div>
         <div id="ordered-services-list">${servicesHtml}</div>
       </div>
@@ -2043,9 +2047,36 @@ function renderMachineDetails(machine) {
 function renderMachineFooter(machine) {
   if (machine.stateClass === 'in-use') {
     return `
-      <button class="btn btn-warning w-full" style="justify-content:center;padding:12px;" onclick="performMachineAction('close', ${machine.id})">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
-        Thanh toán & Đóng máy
+      <div style="display:grid;grid-template-columns:1fr;gap:10px;width:100%;">
+        <button class="btn btn-ghost w-full" style="justify-content:center;padding:12px;" onclick="performMachineAction('pause', ${machine.id})">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+          Tạm dừng lượt chơi
+        </button>
+        <button class="btn btn-warning w-full" style="justify-content:center;padding:12px;" onclick="performMachineAction('close', ${machine.id})">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+          Thanh toán & Đóng máy
+        </button>
+      </div>
+    `;
+  }
+  if (machine.stateClass === 'paused') {
+    return `
+      <div style="display:grid;grid-template-columns:1fr;gap:10px;width:100%;">
+        <button class="btn btn-success w-full" style="justify-content:center;padding:12px;" onclick="performMachineAction('resume', ${machine.id})">
+          <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16"><path d="M8 5v14l11-7z"/></svg>
+          Tiếp tục lượt chơi
+        </button>
+        <button class="btn btn-warning w-full" style="justify-content:center;padding:12px;" onclick="performMachineAction('close', ${machine.id})">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+          Thanh toán & Đóng máy
+        </button>
+      </div>
+    `;
+  }
+  if (machine.stateClass === 'maintenance') {
+    return `
+      <button class="btn btn-ghost w-full" style="justify-content:center;padding:12px;" disabled>
+        Máy chưa sẵn sàng
       </button>
     `;
   }
@@ -2338,9 +2369,13 @@ async function performMachineAction(action, machineId) {
   const machine = appState.machines.find(m => m.id === machineId);
   if (!machine) return;
 
-  const confirmMessage = action === 'open'
-    ? `Mở máy ${machine.displayName}?`
-    : `Đóng và thanh toán máy ${machine.displayName}?`;
+  const actionMessages = {
+    open: `Mở máy ${machine.displayName}?`,
+    close: `Đóng và thanh toán máy ${machine.displayName}?`,
+    pause: `Tạm dừng lượt chơi trên ${machine.displayName}?`,
+    resume: `Tiếp tục lượt chơi trên ${machine.displayName}?`
+  };
+  const confirmMessage = actionMessages[action] || `Thực hiện thao tác trên ${machine.displayName}?`;
 
   if (!window.confirm(confirmMessage)) return;
 
@@ -2359,7 +2394,7 @@ async function performMachineAction(action, machineId) {
     if (!response.ok) throw new Error(result.message || 'Lỗi không xác định');
 
     if (action === 'close') {
-      const sessionId = result.luotChoiId ?? result.luotchoiId ?? machine.luotChoiId ?? machine.luotchoiId;
+      const sessionId = result.sessionId ?? result.luotChoiId ?? result.luotchoiId ?? machine.luotChoiId ?? machine.luotchoiId;
       if (!sessionId) {
         throw new Error('Không tìm thấy mã lượt chơi để thanh toán.');
       }
@@ -2492,7 +2527,7 @@ async function loadInvoicesFromBackend() {
     } catch (error) {
         console.error('Failed to load invoices:', error);
         const body = document.getElementById('invoice-table-body');
-        if (body) body.innerHTML = `<tr><td colspan="8" style="text-align:center;color:var(--accent-red);padding:24px;">${escapeHtml(error.message)}</td></tr>`;
+        if (body) body.innerHTML = `<tr><td colspan="9" style="text-align:center;color:var(--accent-red);padding:24px;">${escapeHtml(error.message)}</td></tr>`;
     }
 }
 
@@ -2514,7 +2549,7 @@ function renderInvoices() {
     const body = document.getElementById('invoice-table-body');
     if (!body) return;
     if (invoices.length === 0) {
-        body.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--text-muted);padding:24px;">Không có hóa đơn theo bộ lọc này.</td></tr>';
+        body.innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--text-muted);padding:24px;">Không có hóa đơn theo bộ lọc này.</td></tr>';
         return;
     }
 
@@ -2532,9 +2567,54 @@ function renderInvoices() {
             <td style="font-family:var(--mono);color:var(--accent-emerald);">-${formatCurrency(invoice.tienKhuyenMai)}</td>
             <td style="font-family:var(--mono);font-weight:800;color:var(--accent-amber);">${formatCurrency(invoice.tongTien)}</td>
             <td>${statusBadge(invoice.trangThai)}</td>
+            <td><button class="btn btn-ghost" style="padding:6px 10px;font-size:12px;" onclick="exportInvoice(${invoice.id})">Xuất</button></td>
           </tr>
         `;
     }).join('');
+}
+
+function exportInvoice(invoiceId) {
+    const invoice = (appState.invoices || []).find(item => Number(item.id) === Number(invoiceId));
+    if (!invoice) {
+        alert('Không tìm thấy hóa đơn để xuất.');
+        return;
+    }
+
+    const details = Array.isArray(invoice.chiTiet) && invoice.chiTiet.length
+        ? invoice.chiTiet.map(item => {
+            const name = item.tenDichVu || item.tendichvu || 'Dịch vụ';
+            const quantity = item.soLuong || item.soluong || 0;
+            const unitPrice = item.donGia || item.dongia || 0;
+            const lineTotal = item.thanhTien || item.thanhtien || 0;
+            return `- ${name} x${quantity} | ${formatCurrency(unitPrice)} | ${formatCurrency(lineTotal)}`;
+        }).join('\n')
+        : '- Không có dịch vụ';
+
+    const content = [
+        'HOMEPS - HOA DON',
+        `Ma hoa don: HD-${invoice.id}`,
+        `May: ${invoice.tenMay || `May ${invoice.mayId || ''}`}`,
+        `Thoi gian: ${formatDateTime(invoice.ngayTao)}`,
+        `Trang thai: ${invoice.trangThai || 'Khong ro'}`,
+        '',
+        'Chi tiet dich vu:',
+        details,
+        '',
+        `Tien gio: ${formatCurrency(invoice.tienChoi)}`,
+        `Tien dich vu: ${formatCurrency(invoice.tienDichVu)}`,
+        `Giam gia: ${formatCurrency(invoice.tienKhuyenMai)}`,
+        `Tong thanh toan: ${formatCurrency(invoice.tongTien)}`
+    ].join('\n');
+
+    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `hoa-don-HD-${invoice.id}.txt`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
 }
 
 async function loadEventsFromBackend() {
@@ -2784,6 +2864,7 @@ function formatDuration(minutes) {
 function sessionStatusBadge(status) {
     const raw = String(status || '').toUpperCase();
     if (raw === 'DANG_CHOI') return '<span class="badge badge-green"><span class="badge-dot"></span>Đang chơi</span>';
+    if (raw === 'TAM_DUNG') return '<span class="badge badge-amber"><span class="badge-dot"></span>Tạm dừng</span>';
     if (raw === 'DA_KET_THUC') return '<span class="badge badge-blue"><span class="badge-dot"></span>Đã kết thúc</span>';
     return `<span class="badge"><span class="badge-dot"></span>${escapeHtml(status || 'Không rõ')}</span>`;
 }
@@ -2874,6 +2955,7 @@ function renderHistory() {
 function machineStatusLabel(status) {
     const raw = String(status || '').toUpperCase();
     if (raw === 'DANG_CHOI') return 'Đang chơi';
+    if (raw === 'TAM_DUNG') return 'Tạm dừng';
     if (raw === 'BAO_TRI') return 'Bảo trì';
     if (raw === 'HONG') return 'Hỏng';
     return 'Trống';
@@ -2885,8 +2967,8 @@ function selectedAttr(value, current) {
 
 function machineStatusOptions(current) {
     const raw = String(current || 'BINH_THUONG').toUpperCase();
-    const options = raw === 'DANG_CHOI'
-        ? [{ value: 'DANG_CHOI', label: 'Đang chơi' }]
+    const options = ['DANG_CHOI', 'TAM_DUNG'].includes(raw)
+        ? [{ value: raw, label: raw === 'TAM_DUNG' ? 'Tạm dừng' : 'Đang chơi' }]
         : [
             { value: 'BINH_THUONG', label: 'Trống' },
             { value: 'BAO_TRI', label: 'Bảo trì' },
@@ -2977,7 +3059,7 @@ function renderAdminMachines(machines) {
     body.innerHTML = machines.map(machine => {
         const id = machine.id;
         const status = String(machine.tinhTrang || machine.tinhtrang || 'BINH_THUONG').toUpperCase();
-        const isPlaying = status === 'DANG_CHOI';
+        const isPlaying = ['DANG_CHOI', 'TAM_DUNG'].includes(status);
         return `
           <tr>
             <td>
@@ -3052,6 +3134,32 @@ async function postAdminAction(form) {
         throw new Error(data.message || `Backend error: ${response.status}`);
     }
     return data;
+}
+
+async function backupData() {
+    try {
+        const response = await fetch(`${API_BASE}/backup`);
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.message || `Backend error: ${response.status}`);
+        }
+
+        const blob = await response.blob();
+        const disposition = response.headers.get('Content-Disposition') || '';
+        const match = disposition.match(/filename="?([^"]+)"?/i);
+        const filename = match ? match[1] : `homeps-backup-${getLocalDateInputValue()}.json`;
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        URL.revokeObjectURL(url);
+        alert('Đã tạo file sao lưu dữ liệu.');
+    } catch (error) {
+        alert(`Sao lưu dữ liệu thất bại: ${error.message}`);
+    }
 }
 
 async function submitAdminMachineForm(event) {

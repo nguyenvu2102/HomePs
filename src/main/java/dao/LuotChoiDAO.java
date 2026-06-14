@@ -32,6 +32,14 @@ public class LuotChoiDAO {
         return Optional.empty();
     }
 
+    public Optional<LuotChoi> findOpenByMayId(int mayId) {
+        try (Connection conn = DBConnection.getConnection()) {
+            return findOpenByMayId(conn, mayId);
+        } catch (SQLException e) {
+            throw new RuntimeException("Cannot load open play session", e);
+        }
+    }
+
     public Optional<LuotChoi> findById(int id) {
         String sql = "SELECT id, mayid, nhanvienid, thoigianbatdau, thoigianketthuc, dongiagio, tongtiengio, trangthai " +
                 "FROM luotchoi WHERE id = ?";
@@ -82,13 +90,16 @@ public class LuotChoiDAO {
     }
 
     public Optional<Double> ketThucLuotChoi(Connection conn, int mayId) {
-        Optional<LuotChoi> activeOpt = findActiveByMayId(conn, mayId);
-        if (!activeOpt.isPresent()) {
+        Optional<LuotChoi> openOpt = findOpenByMayId(conn, mayId);
+        if (!openOpt.isPresent()) {
             return Optional.empty();
         }
 
-        LuotChoi active = activeOpt.get();
-        double tongTien = tinhTien(active.getThoiGianBatDau(), active.getDonGiaGio());
+        LuotChoi active = openOpt.get();
+        double tongTien = active.getTongTienGio();
+        if ("DANG_CHOI".equalsIgnoreCase(active.getTrangThai())) {
+            tongTien += tinhTien(active.getThoiGianBatDau(), active.getDonGiaGio());
+        }
 
         String sql = "UPDATE luotchoi SET thoigianketthuc = NOW(), tongtiengio = ?, trangthai = 'DA_KET_THUC' WHERE id = ?";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -98,6 +109,38 @@ public class LuotChoiDAO {
             return Optional.of(tongTien);
         } catch (Exception e) {
             throw new RuntimeException("Cannot stop play session", e);
+        }
+    }
+
+    public Optional<Double> pauseLuotChoi(Connection conn, int mayId) {
+        Optional<LuotChoi> activeOpt = findActiveByMayId(conn, mayId);
+        if (!activeOpt.isPresent()) {
+            return Optional.empty();
+        }
+
+        LuotChoi active = activeOpt.get();
+        double tongTien = active.getTongTienGio() + tinhTien(active.getThoiGianBatDau(), active.getDonGiaGio());
+        String sql = "UPDATE luotchoi SET thoigianketthuc = NOW(), tongtiengio = ?, trangthai = 'TAM_DUNG' WHERE id = ?";
+
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setDouble(1, tongTien);
+            ps.setInt(2, active.getId());
+            ps.executeUpdate();
+            return Optional.of(tongTien);
+        } catch (Exception e) {
+            throw new RuntimeException("Cannot pause play session", e);
+        }
+    }
+
+    public boolean resumeLuotChoi(Connection conn, int mayId) {
+        String sql = "UPDATE luotchoi SET thoigianbatdau = NOW(), thoigianketthuc = NULL, trangthai = 'DANG_CHOI' " +
+                "WHERE id = (SELECT id FROM luotchoi WHERE mayid = ? AND trangthai = 'TAM_DUNG' ORDER BY thoigianketthuc DESC NULLS LAST, id DESC LIMIT 1)";
+
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, mayId);
+            return ps.executeUpdate() > 0;
+        } catch (Exception e) {
+            throw new RuntimeException("Cannot resume play session", e);
         }
     }
 
@@ -127,6 +170,24 @@ public class LuotChoiDAO {
             }
         } catch (Exception e) {
             throw new RuntimeException("Cannot load active play session", e);
+        }
+
+        return Optional.empty();
+    }
+
+    private Optional<LuotChoi> findOpenByMayId(Connection conn, int mayId) {
+        String sql = "SELECT id, mayid, nhanvienid, thoigianbatdau, thoigianketthuc, dongiagio, tongtiengio, trangthai " +
+                "FROM luotchoi WHERE mayid = ? AND trangthai IN ('DANG_CHOI', 'TAM_DUNG') ORDER BY id DESC LIMIT 1";
+
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, mayId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return Optional.of(mapRow(rs));
+                }
+            }
+        } catch (Exception e) {
+            throw new RuntimeException("Cannot load open play session", e);
         }
 
         return Optional.empty();
